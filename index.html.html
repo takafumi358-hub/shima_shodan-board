@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>商談ボード</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#ffffff;
+    --panel-alt:#fff8f1;
+    --line:#f0ddc8;
+    --line-soft:#f4ecdf;
+    --ink:#2a2118;
+    --ink-dim:#8a7a68;
+    --orange:#e8720c;
+    --orange-deep:#c25c05;
+    --orange-pale:#fdead6;
+    --orange-paler:#fff4e9;
+    --red:#d64545;
+    --green:#2f9e50;
+    --blue:#2f6fe0;
+    --purple:#8b5cf6;
+    --gray:#8a93a0;
+    --mono: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+    --sans: -apple-system, 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);}
+  body{padding:0 0 60px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+
+  /* header / board rail */
+  .rail{
+    background:
+      repeating-linear-gradient(-45deg, rgba(232,114,12,0.07) 0 10px, transparent 10px 20px);
+    border-bottom:3px solid var(--orange);
+    background-color:var(--orange-paler);
+  }
+  .rail-inner{max-width:1180px;margin:0 auto;padding:22px 20px 16px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+  .brand-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--orange-deep);text-transform:uppercase;margin:0 0 6px;font-weight:700;}
+  .brand-title{font-size:28px;font-weight:800;margin:0;letter-spacing:.02em;color:var(--ink);}
+  .brand-sub{color:var(--ink-dim);font-size:13px;margin-top:4px;}
+  .clock{font-family:var(--mono);font-size:13px;color:var(--ink-dim);text-align:right;}
+  .clock b{color:var(--orange-deep);font-size:15px;display:block;}
+
+  /* tabs */
+  .tabs{display:flex;gap:2px;margin-top:18px;flex-wrap:wrap;}
+  .tab-btn{
+    font-family:var(--mono);font-size:13px;letter-spacing:.06em;
+    background:var(--orange-pale);color:var(--orange-deep);border:1px solid var(--line);border-bottom:none;
+    padding:10px 20px;cursor:pointer;border-radius:6px 6px 0 0;
+  }
+  .tab-btn.active{background:var(--bg);color:var(--orange-deep);border-color:var(--orange);font-weight:700;}
+
+  .panel{display:none;padding:24px 0 0;}
+  .panel.active{display:block;}
+
+  /* cards */
+  .stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px;}
+  .stat-card{background:var(--panel-alt);border:1px solid var(--line);border-radius:8px;padding:14px 16px;}
+  .stat-card .n{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--orange-deep);}
+  .stat-card .l{font-size:11px;color:var(--ink-dim);margin-top:2px;letter-spacing:.04em;}
+  .stat-card.warn .n{color:var(--red);}
+  .stat-card.ok .n{color:var(--green);}
+
+  .grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;align-items:start;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(180,120,40,0.05);}
+  .card h2{font-size:14px;margin:0 0 14px;color:var(--orange-deep);letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);font-weight:700;}
+  .card h2 span{color:var(--ink-dim);text-transform:none;font-family:var(--sans);font-weight:400;margin-left:8px;font-size:12px;}
+
+  /* form */
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;color:var(--ink-dim);margin-bottom:5px;}
+  .field input,.field select,.field textarea{
+    width:100%;background:#fffdfb;border:1px solid var(--line);color:var(--ink);
+    padding:9px 10px;border-radius:6px;font-family:var(--sans);font-size:14px;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-pale);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  textarea{resize:vertical;min-height:44px;}
+  .customer-block{border-left:3px solid var(--orange-pale);padding-left:12px;margin-top:10px;}
+  .section-divider{border-top:1px dashed var(--line);margin:18px 0;}
+
+  .btn{
+    font-family:var(--sans);font-weight:700;font-size:14px;border:none;border-radius:6px;
+    padding:11px 18px;cursor:pointer;
+  }
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-primary:hover{background:var(--orange-deep);}
+  .btn-ghost{background:transparent;color:var(--ink-dim);border:1px solid var(--line);}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--ink-dim);}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);}
+  .form-actions{display:flex;gap:10px;margin-top:16px;align-items:center;}
+  .form-msg{font-size:12px;color:var(--green);margin-left:auto;}
+
+  /* HOT badges */
+  .hot{
+    font-family:var(--mono);font-weight:700;font-size:12px;padding:2px 8px;border-radius:20px;
+    display:inline-block;text-align:center;min-width:34px;
+  }
+  .hot-AA{background:rgba(47,111,224,.10);color:var(--blue);border:1px solid var(--blue);}
+  .hot-5{background:rgba(214,69,69,.10);color:var(--red);border:1px solid var(--red);}
+  .hot-3{background:var(--orange-pale);color:var(--orange-deep);border:1px solid var(--orange);}
+  .hot-1{background:rgba(47,158,80,.10);color:var(--green);border:1px solid var(--green);}
+  .hot-移動{background:rgba(138,147,160,.10);color:var(--gray);border:1px solid var(--gray);}
+  .hot-ラジコン{background:rgba(139,92,246,.10);color:var(--purple);border:1px solid var(--purple);}
+  .hot-other{background:#f4ecdf;color:var(--ink-dim);border:1px solid var(--line);}
+
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--ink-dim);}
+  .legend .item{display:flex;align-items:center;gap:6px;}
+
+  /* filters */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .filters select,.filters input{
+    background:#fffdfb;border:1px solid var(--line);color:var(--ink);
+    padding:8px 10px;border-radius:6px;font-size:13px;
+  }
+  .filters input[type=text]{flex:1;min-width:180px;}
+
+  /* table */
+  .table-scroll{max-height:460px;overflow-y:auto;overflow-x:auto;border:1px solid var(--line-soft);border-radius:6px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--ink-dim);
+    border-bottom:1px solid var(--line);padding:8px 8px;text-transform:uppercase;white-space:nowrap;
+    position:sticky;top:0;background:var(--panel);z-index:1;
+  }
+  tbody td{padding:9px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top;}
+  tbody tr:hover{background:var(--orange-paler);}
+  .stockno{font-family:var(--mono);color:var(--orange-deep);font-weight:700;}
+  .cust{font-size:12px;color:var(--ink-dim);}
+  .cust b{color:var(--ink);font-weight:500;}
+  .cat-tag{font-size:11px;color:var(--ink-dim);border:1px solid var(--line);padding:1px 7px;border-radius:10px;white-space:nowrap;background:var(--orange-paler);}
+  .deadline-soon{color:var(--red);font-weight:700;}
+  .row-actions{white-space:nowrap;}
+  .row-actions button{
+    background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;margin-right:8px;text-decoration:underline;
+    font-family:var(--sans);padding:0;
+  }
+  .row-actions button:hover{color:var(--orange-deep);}
+
+  /* deadline list */
+  .dl-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:13px;}
+  .dl-item:last-child{border-bottom:none;}
+  .dl-item .dv{font-family:var(--mono);color:var(--red);font-size:12px;white-space:nowrap;}
+
+  /* bars */
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12px;}
+  .bar-label{width:70px;color:var(--ink-dim);flex-shrink:0;}
+  .bar-track{flex:1;background:var(--orange-paler);border-radius:4px;height:16px;overflow:hidden;border:1px solid var(--line);}
+  .bar-fill{height:100%;background:linear-gradient(90deg, #f4b366, var(--orange));}
+  .bar-count{width:26px;text-align:right;font-family:var(--mono);color:var(--ink-dim);}
+
+  .empty{color:var(--ink-dim);font-size:13px;padding:20px 0;text-align:center;}
+  .footnote{color:var(--ink-dim);font-size:11px;margin-top:24px;text-align:center;}
+
+  .small-list-item{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:13px;align-items:center;}
+  .small-list-item:last-child{border-bottom:none;}
+  .week-tag{font-family:var(--mono);font-size:11px;color:var(--orange-deep);background:var(--orange-pale);padding:2px 8px;border-radius:10px;}
+
+  @media (max-width: 880px){
+    .stat-row{grid-template-columns:repeat(2,1fr);}
+    .grid2{grid-template-columns:1fr;}
+    .row2,.row3{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="rail">
+  <div class="rail-inner">
+    <div>
+      <p class="brand-eyebrow">DEAL BOARD / 車輌商談管理</p>
+      <h1 class="brand-title">商談ボード <span style="font-size:12px;font-family:var(--mono);color:var(--orange-deep);background:var(--orange-pale);padding:2px 8px;border-radius:10px;vertical-align:middle;">v1.0</span></h1>
+      <p class="brand-sub">在庫車輌の商談状況をリアルタイムに共有します・入力データはGoogleスプレッドシートに自動保存されます</p>
+    </div>
+    <div class="clock"><b id="clockTime">--:--</b><span id="clockDate">----/--/--</span></div>
+  </div>
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab-btn" data-tab="dash">▤ ダッシュボード</button>
+      <button class="tab-btn active" data-tab="form">＋ 入力フォーム</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- FORM PANEL -->
+  <div class="panel active" id="panel-form">
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h2 id="formTitle">新規商談を登録 <span>在庫番号・車輌・お客様情報を入力してください</span></h2>
+          <form id="dealForm">
+            <input type="hidden" id="f_id">
+
+            <div class="field">
+              <label>カテゴリ（分類）</label>
+              <select id="f_category">
+                <option>平ボディ</option>
+                <option>クレーン</option>
+                <option>ダンプ</option>
+                <option>セルフ</option>
+                <option>バン</option>
+                <option>ウイング</option>
+                <option>冷蔵冷凍</option>
+                <option>トラクタ</option>
+                <option>新車</option>
+                <option>その他</option>
+              </select>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>在庫番号</label>
+                <input type="text" id="f_stock_no" placeholder="例）1193 / E672 / 在庫前">
+              </div>
+              <div class="field">
+                <label>車輌（型式）</label>
+                <input type="text" id="f_vehicle" placeholder="例）FU74HZ">
+              </div>
+            </div>
+
+            <div class="row2">
+              <div class="field">
+                <label>HOT度</label>
+                <select id="f_hot">
+                  <option value="1">1（成り行き・提案中）</option>
+                  <option value="3">3（承認車輛）</option>
+                  <option value="5">5（回収待ち）</option>
+                  <option value="AA">AA（入札会）</option>
+                  <option value="移動">移動（店舗間移動）</option>
+                  <option value="ラジコン">ラジコン（未確認）</option>
+                  <option value="">未設定</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>商談日</label>
+                <input type="date" id="f_deal_date">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>商談期限</label>
+              <textarea id="f_deadline_note" placeholder="例）銀行審査 24日まで"></textarea>
+            </div>
+
+            <div class="customer-block">
+              <div class="field">
+                <label>お客様名①</label>
+                <input type="text" id="f_c1" placeholder="例）8/3 若杉自動車 高橋様（安）">
+              </div>
+              <div class="field">
+                <label>お客様名②</label>
+                <input type="text" id="f_c2">
+              </div>
+              <div class="field">
+                <label>お客様名③</label>
+                <input type="text" id="f_c3">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="submitBtn">この内容で登録する</button>
+              <button type="button" class="btn btn-ghost" id="clearBtn">クリア</button>
+              <span class="form-msg" id="formMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>成約車両を登録 <span>ご成約車輌（週次）</span></h2>
+          <form id="contractForm">
+            <input type="hidden" id="ct_id">
+            <div class="row2">
+              <div class="field">
+                <label>成約週</label>
+                <select id="ct_week">
+                  <option>1週目</option>
+                  <option>2週目</option>
+                  <option>3週目</option>
+                  <option>4週目</option>
+                  <option>5週目</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>在庫番号</label>
+                <input type="text" id="ct_stock_no" placeholder="例）3578">
+              </div>
+            </div>
+            <div class="field">
+              <label>備考</label>
+              <input type="text" id="ct_note" placeholder="任意">
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">成約車両を登録する</button>
+              <span class="form-msg" id="ctMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>入札会エントリーを登録 <span>店舗・会場・出品車輌</span></h2>
+          <form id="auctionForm">
+            <input type="hidden" id="au_id">
+            <div class="row2">
+              <div class="field">
+                <label>店舗</label>
+                <select id="au_store">
+                  <option>北海道</option>
+                  <option>宮城</option>
+                  <option>福島</option>
+                  <option>東京</option>
+                  <option>新潟</option>
+                  <option>愛知</option>
+                  <option>大阪</option>
+                  <option>岡山</option>
+                  <option>福岡</option>
+                  <option>リース</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>入札会場</label>
+                <input type="text" id="au_venue" placeholder="例）サミット / イースト / オールジャパン">
+              </div>
+            </div>
+            <div class="field">
+              <label>出品予定車輌（在庫番号、カンマ区切り）</label>
+              <input type="text" id="au_stocks" placeholder="例）1228, 1193, 1226">
+            </div>
+            <div class="field">
+              <label>備考</label>
+              <input type="text" id="au_note" placeholder="任意">
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">入札会エントリーを登録する</button>
+              <span class="form-msg" id="auMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>HOT度の凡例</h2>
+          <div class="legend">
+            <div class="item"><span class="hot hot-5">5</span> 回収待ち</div>
+            <div class="item"><span class="hot hot-3">3</span> 承認車輛</div>
+            <div class="item"><span class="hot hot-1">1</span> 成り行き・提案中</div>
+            <div class="item"><span class="hot hot-AA">AA</span> 入札会</div>
+            <div class="item"><span class="hot hot-移動">移動</span> 店舗間移動</div>
+            <div class="item"><span class="hot hot-ラジコン">ラジコン</span> 未確認</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>既存の商談を編集 <span>クリックで呼び出し</span></h2>
+          <div class="field"><input type="text" id="quickSearch" placeholder="在庫番号・車輌・お客様名で検索"></div>
+          <div id="quickList" style="max-height:340px;overflow:auto;"></div>
+        </div>
+
+        <div class="card">
+          <h2>成約車両一覧</h2>
+          <div id="contractList" style="max-height:260px;overflow:auto;"></div>
+        </div>
+
+        <div class="card">
+          <h2>入札会エントリー一覧</h2>
+          <div id="auctionList" style="max-height:260px;overflow:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PANEL -->
+  <div class="panel" id="panel-dash">
+    <div class="stat-row" id="statRow"></div>
+
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h2>商談一覧 <span id="tableCount"></span>
+            <button id="exportBtn" class="btn btn-ghost" style="float:right;padding:5px 12px;font-size:12px;">⬇ 全データをバックアップ（JSON）</button>
+          </h2>
+          <div class="filters">
+            <input type="text" id="searchInput" placeholder="在庫番号・車輌・お客様名で検索">
+            <select id="filterCategory"><option value="">全カテゴリ</option></select>
+            <select id="filterHot">
+              <option value="">全HOT度</option>
+              <option value="5">5 回収待ち</option>
+              <option value="3">3 承認車輛</option>
+              <option value="1">1 提案中</option>
+              <option value="AA">AA 入札会</option>
+              <option value="移動">移動</option>
+              <option value="ラジコン">ラジコン</option>
+            </select>
+          </div>
+          <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>カテゴリ</th><th>在庫番号</th><th>車輌</th><th>HOT</th><th>商談日</th><th>お客様</th><th>期限</th><th></th>
+            </tr></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+          </div>
+          <div class="empty" id="tableEmpty" style="display:none;">該当する商談がありません</div>
+        </div>
+
+        <div class="card">
+          <h2>成約車両（週次）</h2>
+          <div id="dashContractList" style="max-height:340px;overflow-y:auto;"></div>
+        </div>
+
+        <div class="card">
+          <h2>入札会エントリー</h2>
+          <div id="dashAuctionList" style="max-height:340px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>期限が近い商談</h2>
+          <div id="deadlineList"></div>
+        </div>
+        <div class="card">
+          <h2>カテゴリ別 在庫件数</h2>
+          <div id="catBars"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footnote">BAR3TREES / Shima Shokai 業務ツール &middot; v1.0 &middot; データはGoogleスプレッドシートに保存され、アクセスした全員で共有されます</p>
+</div>
+
+<script>
+(function(){
+  // ▼▼▼ ここに Google Apps Script の「ウェブアプリ」デプロイURLを貼り付けてください ▼▼▼
+  // 例）https://script.google.com/macros/s/AKfycbxxxxxxxxxxxxxxxx/exec
+  const GAS_API_URL = 'PUT_YOUR_WEB_APP_URL_HERE';
+  // ▲▲▲ ここまで ▲▲▲
+
+  let deals = [];
+  let contracted = [];
+  let auctions = [];
+  let editingId = null;
+  let apiReady = GAS_API_URL && GAS_API_URL.indexOf('https://') === 0;
+
+  const CATS = ['平ボディ','クレーン','ダンプ','セルフ','バン','ウイング','冷蔵冷凍','トラクタ','新車','その他'];
+
+  // ---------- API (Google Apps Script backend) ----------
+  async function apiGet(type){
+    const res = await fetch(GAS_API_URL + '?type=' + encodeURIComponent(type));
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'API error');
+    return json.data || [];
+  }
+  async function apiUpsert(type, record){
+    const res = await fetch(GAS_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, // text/plain でCORSプリフライトを回避
+      body: JSON.stringify({type, action:'upsert', record})
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'API error');
+    return json.result;
+  }
+  async function apiDelete(type, id){
+    const res = await fetch(GAS_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({type, action:'delete', id})
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || 'API error');
+    return json.result;
+  }
+
+  async function loadAll(){
+    if(!apiReady){
+      showApiWarning();
+      return;
+    }
+    try{
+      [deals, contracted, auctions] = await Promise.all([
+        apiGet('deals'), apiGet('contracted'), apiGet('auctions')
+      ]);
+    }catch(e){
+      console.error(e);
+      showApiWarning('データの取得に失敗しました: ' + e.message);
+    }
+  }
+
+  function showApiWarning(msg){
+    const text = msg || 'GAS_API_URL が未設定です。app.js 内の GAS_API_URL に、デプロイしたウェブアプリのURLを貼り付けてください。';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fdecea;border:1px solid #d64545;color:#a33;padding:12px 16px;border-radius:8px;margin:16px 0;font-size:13px;';
+    box.textContent = '⚠ ' + text;
+    document.querySelector('.wrap').prepend(box);
+  }
+
+  // ---------- helpers ----------
+  function hotClass(h){
+    if(['AA','5','3','1','移動','ラジコン'].includes(h)) return 'hot-'+h;
+    return 'hot-other';
+  }
+  function hotLabel(h){
+    if(!h) return '<span class="hot hot-other">-</span>';
+    return '<span class="hot '+hotClass(h)+'">'+escapeHtml(h)+'</span>';
+  }
+  function escapeHtml(s){
+    if(s===undefined||s===null) return '';
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function daysUntil(dateStr){
+    if(!dateStr) return null;
+    const d = new Date(dateStr+'T00:00:00');
+    if(isNaN(d)) return null;
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    return Math.round((d-now)/86400000);
+  }
+  function fmtDate(dateStr){
+    if(!dateStr) return '';
+    const parts = dateStr.split('-');
+    if(parts.length!==3) return dateStr;
+    return parts[1]+'/'+parts[2];
+  }
+  function setMsg(elId, text, isErr){
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.style.color = isErr ? 'var(--red)' : 'var(--green)';
+    if(text){ setTimeout(()=>{ if(el.textContent===text) el.textContent=''; }, 3500); }
+  }
+
+  // ---------- deal form ----------
+  function resetForm(){
+    editingId = null;
+    document.getElementById('f_id').value='';
+    document.getElementById('f_category').value='平ボディ';
+    document.getElementById('f_stock_no').value='';
+    document.getElementById('f_vehicle').value='';
+    document.getElementById('f_hot').value='1';
+    document.getElementById('f_deal_date').value='';
+    document.getElementById('f_deadline_note').value='';
+    document.getElementById('f_c1').value='';
+    document.getElementById('f_c2').value='';
+    document.getElementById('f_c3').value='';
+    document.getElementById('formTitle').innerHTML = '新規商談を登録 <span>在庫番号・車輌・お客様情報を入力してください</span>';
+    document.getElementById('submitBtn').textContent = 'この内容で登録する';
+  }
+
+  function fillForm(deal){
+    editingId = deal.id;
+    document.getElementById('f_id').value = deal.id;
+    document.getElementById('f_category').value = deal.category || '平ボディ';
+    document.getElementById('f_stock_no').value = deal.stock_no || '';
+    document.getElementById('f_vehicle').value = deal.vehicle || '';
+    document.getElementById('f_hot').value = deal.hot || '';
+    document.getElementById('f_deal_date').value = deal.deal_date || '';
+    document.getElementById('f_deadline_note').value = deal.deadline_note || '';
+    document.getElementById('f_c1').value = deal.customer1 || '';
+    document.getElementById('f_c2').value = deal.customer2 || '';
+    document.getElementById('f_c3').value = deal.customer3 || '';
+    document.getElementById('formTitle').innerHTML = '商談を編集中 <span>在庫番号 '+escapeHtml(deal.stock_no)+'</span>';
+    document.getElementById('submitBtn').textContent = '変更を保存する';
+    document.querySelector('[data-tab="form"]').click();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  async function handleSubmit(e){
+    e.preventDefault();
+    if(!apiReady){ showApiWarning(); return; }
+    const stock_no = document.getElementById('f_stock_no').value.trim();
+    if(!stock_no){
+      setMsg('formMsg', '在庫番号を入力してください', true);
+      return;
+    }
+    const record = {
+      id: editingId || '',
+      category: document.getElementById('f_category').value,
+      stock_no: stock_no,
+      vehicle: document.getElementById('f_vehicle').value.trim(),
+      hot: document.getElementById('f_hot').value,
+      deal_date: document.getElementById('f_deal_date').value,
+      deadline_note: document.getElementById('f_deadline_note').value.trim(),
+      customer1: document.getElementById('f_c1').value.trim(),
+      customer2: document.getElementById('f_c2').value.trim(),
+      customer3: document.getElementById('f_c3').value.trim(),
+      updated_at: new Date().toISOString()
+    };
+    try{
+      const saved = await apiUpsert('deals', record);
+      if(editingId){
+        const idx = deals.findIndex(d=>String(d.id)===String(editingId));
+        if(idx>=0) deals[idx] = saved; else deals.unshift(saved);
+      } else {
+        deals.unshift(saved);
+      }
+      setMsg('formMsg', editingId ? '更新しました' : '登録しました', false);
+      resetForm();
+      renderAll();
+    }catch(err){
+      console.error(err);
+      setMsg('formMsg', '保存に失敗しました: ' + err.message, true);
+    }
+  }
+
+  async function deleteDeal(id){
+    if(!confirm('この商談を削除しますか？')) return;
+    try{
+      await apiDelete('deals', id);
+      deals = deals.filter(d=>String(d.id)!==String(id));
+      renderAll();
+    }catch(err){ console.error(err); alert('削除に失敗しました: ' + err.message); }
+  }
+
+  // ---------- contracted vehicles ----------
+  async function handleContractSubmit(e){
+    e.preventDefault();
+    if(!apiReady){ showApiWarning(); return; }
+    const stock_no = document.getElementById('ct_stock_no').value.trim();
+    if(!stock_no){ setMsg('ctMsg', '在庫番号を入力してください', true); return; }
+    const record = {
+      id: '',
+      week: document.getElementById('ct_week').value,
+      stock_no: stock_no,
+      note: document.getElementById('ct_note').value.trim()
+    };
+    try{
+      const saved = await apiUpsert('contracted', record);
+      contracted.unshift(saved);
+      setMsg('ctMsg', '登録しました', false);
+      document.getElementById('contractForm').reset();
+      renderAll();
+    }catch(err){
+      console.error(err);
+      setMsg('ctMsg', '保存に失敗しました: ' + err.message, true);
+    }
+  }
+
+  async function deleteContract(id){
+    if(!confirm('この成約車両を削除しますか？')) return;
+    try{
+      await apiDelete('contracted', id);
+      contracted = contracted.filter(c=>String(c.id)!==String(id));
+      renderAll();
+    }catch(err){ console.error(err); alert('削除に失敗しました: ' + err.message); }
+  }
+
+  // ---------- auctions ----------
+  async function handleAuctionSubmit(e){
+    e.preventDefault();
+    if(!apiReady){ showApiWarning(); return; }
+    const venue = document.getElementById('au_venue').value.trim();
+    if(!venue){ setMsg('auMsg', '入札会場を入力してください', true); return; }
+    const record = {
+      id: '',
+      store: document.getElementById('au_store').value,
+      venue: venue,
+      stock_nos: document.getElementById('au_stocks').value.trim(),
+      note: document.getElementById('au_note').value.trim()
+    };
+    try{
+      const saved = await apiUpsert('auctions', record);
+      auctions.unshift(saved);
+      setMsg('auMsg', '登録しました', false);
+      document.getElementById('auctionForm').reset();
+      renderAll();
+    }catch(err){
+      console.error(err);
+      setMsg('auMsg', '保存に失敗しました: ' + err.message, true);
+    }
+  }
+
+  async function deleteAuction(id){
+    if(!confirm('この入札会エントリーを削除しますか？')) return;
+    try{
+      await apiDelete('auctions', id);
+      auctions = auctions.filter(a=>String(a.id)!==String(id));
+      renderAll();
+    }catch(err){ console.error(err); alert('削除に失敗しました: ' + err.message); }
+  }
+
+  // ---------- quick list (form tab) ----------
+  function renderQuickList(){
+    const q = document.getElementById('quickSearch').value.trim().toLowerCase();
+    const el = document.getElementById('quickList');
+    let list = deals.slice(0, 400);
+    if(q){
+      list = list.filter(d => [d.stock_no,d.vehicle,d.customer1,d.customer2,d.customer3].join(' ').toLowerCase().includes(q));
+    }
+    list = list.slice(0, 60);
+    if(list.length===0){
+      el.innerHTML = '<div class="empty">見つかりませんでした</div>';
+      return;
+    }
+    el.innerHTML = list.map(d => `
+      <div class="dl-item" style="cursor:pointer" data-id="${d.id}">
+        <span>${hotLabel(d.hot)} <span class="stockno">${escapeHtml(d.stock_no)}</span> ${escapeHtml(d.vehicle)}</span>
+        <span class="cust">${escapeHtml((d.customer1||'').slice(0,16))}</span>
+      </div>
+    `).join('');
+    el.querySelectorAll('[data-id]').forEach(node=>{
+      node.addEventListener('click', ()=>{
+        const id = node.getAttribute('data-id');
+        const deal = deals.find(d=>String(d.id)===String(id));
+        if(deal) fillForm(deal);
+      });
+    });
+  }
+
+  function renderContractLists(){
+    const sorted = contracted.slice().sort((a,b)=> a.week.localeCompare(b.week));
+    const html = (sorted.length===0)
+      ? '<div class="empty">登録された成約車両がありません</div>'
+      : sorted.map(c=>`
+        <div class="small-list-item">
+          <span><span class="week-tag">${escapeHtml(c.week)}</span> <span class="stockno">${escapeHtml(c.stock_no)}</span> ${escapeHtml(c.note)}</span>
+          <button data-ctdel="${c.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
+        </div>`).join('');
+    document.getElementById('contractList').innerHTML = html;
+    document.getElementById('dashContractList').innerHTML = html || '<div class="empty">登録された成約車両がありません</div>';
+    document.querySelectorAll('[data-ctdel]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteContract(btn.getAttribute('data-ctdel')));
+    });
+  }
+
+  function renderAuctionLists(){
+    const html = (auctions.length===0)
+      ? '<div class="empty">登録された入札会エントリーがありません</div>'
+      : auctions.map(a=>`
+        <div class="small-list-item" style="align-items:flex-start;">
+          <span>
+            <span class="cat-tag">${escapeHtml(a.store)}</span>
+            <b>${escapeHtml(a.venue)}</b><br>
+            <span class="cust">${escapeHtml(a.stock_nos)}</span>
+            ${a.note? '<br><span class="cust">'+escapeHtml(a.note)+'</span>' : ''}
+          </span>
+          <button data-audel="${a.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
+        </div>`).join('');
+    document.getElementById('auctionList').innerHTML = html;
+    document.getElementById('dashAuctionList').innerHTML = html || '<div class="empty">登録された入札会エントリーがありません</div>';
+    document.querySelectorAll('[data-audel]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteAuction(btn.getAttribute('data-audel')));
+    });
+  }
+
+  // ---------- dashboard ----------
+  function populateCategoryFilter(){
+    const sel = document.getElementById('filterCategory');
+    sel.innerHTML = '<option value="">全カテゴリ</option>' + CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+
+  function renderStats(){
+    const total = deals.length;
+    const hotCount = h => deals.filter(d=>d.hot===h).length;
+    const soon = deals.filter(d=>{
+      const n = daysUntil(d.deal_date);
+      return n!==null && n>=0 && n<=3;
+    }).length;
+    const overdue = deals.filter(d=>{
+      const n = daysUntil(d.deal_date);
+      return n!==null && n<0;
+    }).length;
+    const cards = [
+      {n: total, l:'総商談件数', cls:''},
+      {n: hotCount('5'), l:'5・回収待ち', cls:'warn'},
+      {n: hotCount('3'), l:'3・承認車輛', cls:''},
+      {n: soon, l:'3日以内の期限', cls:'warn'},
+      {n: overdue, l:'期限超過', cls:overdue>0?'warn':'ok'},
+    ];
+    document.getElementById('statRow').innerHTML = cards.map(c=>`
+      <div class="stat-card ${c.cls}"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>
+    `).join('');
+  }
+
+  function renderDeadlines(){
+    const withDates = deals.filter(d=>d.deal_date).map(d=>({...d, n: daysUntil(d.deal_date)}))
+      .sort((a,b)=>a.n-b.n).slice(0,10);
+    const el = document.getElementById('deadlineList');
+    if(withDates.length===0){ el.innerHTML = '<div class="empty">登録された商談日がありません</div>'; return; }
+    el.innerHTML = withDates.map(d=>`
+      <div class="dl-item">
+        <span><span class="stockno">${escapeHtml(d.stock_no)}</span> ${escapeHtml(d.vehicle)} ${hotLabel(d.hot)}</span>
+        <span class="dv">${fmtDate(d.deal_date)}（${d.n>=0? d.n+'日後' : Math.abs(d.n)+'日超過'}）</span>
+      </div>
+    `).join('');
+  }
+
+  function renderCatBars(){
+    const counts = {};
+    CATS.forEach(c=>counts[c]=0);
+    deals.forEach(d=>{ counts[d.category] = (counts[d.category]||0)+1; });
+    const max = Math.max(1, ...Object.values(counts));
+    const el = document.getElementById('catBars');
+    el.innerHTML = CATS.map(c=>`
+      <div class="bar-row">
+        <div class="bar-label">${c}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(counts[c]/max*100).toFixed(0)}%"></div></div>
+        <div class="bar-count">${counts[c]}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderTable(){
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const fc = document.getElementById('filterCategory').value;
+    const fh = document.getElementById('filterHot').value;
+    let list = deals.slice();
+    if(fc) list = list.filter(d=>d.category===fc);
+    if(fh) list = list.filter(d=>d.hot===fh);
+    if(q) list = list.filter(d => [d.stock_no,d.vehicle,d.customer1,d.customer2,d.customer3,d.deadline_note].join(' ').toLowerCase().includes(q));
+
+    document.getElementById('tableCount').textContent = `全 ${list.length} 件 / 総 ${deals.length} 件`;
+    const body = document.getElementById('tableBody');
+    document.getElementById('tableEmpty').style.display = list.length? 'none':'block';
+
+    body.innerHTML = list.map(d=>{
+      const n = daysUntil(d.deal_date);
+      const soonCls = (n!==null && n<=3) ? 'deadline-soon' : '';
+      const custs = [d.customer1,d.customer2,d.customer3].filter(Boolean).map(c=>`<div><b>・</b>${escapeHtml(c)}</div>`).join('') || '<span class="cust">-</span>';
+      return `
+      <tr>
+        <td><span class="cat-tag">${escapeHtml(d.category)}</span></td>
+        <td class="stockno">${escapeHtml(d.stock_no)}</td>
+        <td>${escapeHtml(d.vehicle)}</td>
+        <td>${hotLabel(d.hot)}</td>
+        <td class="${soonCls}">${fmtDate(d.deal_date)}</td>
+        <td class="cust">${custs}</td>
+        <td class="cust">${escapeHtml(d.deadline_note)}</td>
+        <td class="row-actions">
+          <button data-edit="${d.id}">編集</button>
+          <button data-del="${d.id}">削除</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-edit');
+        const deal = deals.find(d=>String(d.id)===String(id));
+        if(deal) fillForm(deal);
+      });
+    });
+    body.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        deleteDeal(btn.getAttribute('data-del'));
+      });
+    });
+  }
+
+  function renderAll(){
+    renderStats();
+    renderDeadlines();
+    renderCatBars();
+    renderTable();
+    renderQuickList();
+    renderContractLists();
+    renderAuctionLists();
+  }
+
+  // ---------- export / backup ----------
+  function handleExport(){
+    const payload = {
+      exported_at: new Date().toISOString(),
+      deals, contracted, auctions
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `商談ボード_backup_${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ---------- clock ----------
+  function tickClock(){
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('clockTime').textContent = hh+':'+mm;
+    document.getElementById('clockDate').textContent =
+      now.getFullYear()+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
+  }
+
+  // ---------- tabs ----------
+  function initTabs(){
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+        if(btn.dataset.tab==='dash') renderAll();
+      });
+    });
+  }
+
+  async function init(){
+    initTabs();
+    populateCategoryFilter();
+    resetForm();
+    tickClock();
+    setInterval(tickClock, 30000);
+
+    document.getElementById('dealForm').addEventListener('submit', handleSubmit);
+    document.getElementById('clearBtn').addEventListener('click', resetForm);
+    document.getElementById('quickSearch').addEventListener('input', renderQuickList);
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+    document.getElementById('filterCategory').addEventListener('change', renderTable);
+    document.getElementById('filterHot').addEventListener('change', renderTable);
+    document.getElementById('contractForm').addEventListener('submit', handleContractSubmit);
+    document.getElementById('auctionForm').addEventListener('submit', handleAuctionSubmit);
+    document.getElementById('exportBtn').addEventListener('click', handleExport);
+
+    await loadAll();
+    renderAll();
+  }
+
+  init();
+})();
+
+</script>
+</body>
+</html>
