@@ -112,6 +112,17 @@
   .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--ink-dim);}
   .legend .item{display:flex;align-items:center;gap:6px;}
 
+  /* category tabs (dashboard) */
+  .cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .cat-tab-btn{
+    font-family:var(--sans);font-size:12px;color:var(--ink-dim);background:var(--orange-paler);
+    border:1px solid var(--line);border-radius:20px;padding:6px 14px;cursor:pointer;white-space:nowrap;
+  }
+  .cat-tab-btn .cnt{font-family:var(--mono);color:var(--ink-dim);margin-left:5px;}
+  .cat-tab-btn:hover{border-color:var(--orange);color:var(--orange-deep);}
+  .cat-tab-btn.active{background:var(--orange);color:#fff;border-color:var(--orange);font-weight:700;}
+  .cat-tab-btn.active .cnt{color:#fff;}
+
   /* filters */
   .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
   .filters select,.filters input{
@@ -385,9 +396,9 @@
           <h2>商談一覧 <span id="tableCount"></span>
             <button id="exportBtn" class="btn btn-ghost" style="float:right;padding:5px 12px;font-size:12px;">⬇ 全データをバックアップ（JSON）</button>
           </h2>
+          <div class="cat-tabs" id="categoryTabs"></div>
           <div class="filters">
             <input type="text" id="searchInput" placeholder="在庫番号・車輌・お客様名で検索">
-            <select id="filterCategory"><option value="">全カテゴリ</option></select>
             <select id="filterHot">
               <option value="">全HOT度</option>
               <option value="5">5 回収待ち</option>
@@ -411,11 +422,19 @@
 
         <div class="card">
           <h2>成約車両（週次）</h2>
-          <div id="dashContractList" style="max-height:340px;overflow-y:auto;"></div>
+          <div class="cat-tabs" id="contractTabs"></div>
+          <div class="table-scroll" style="max-height:340px;">
+            <table>
+              <thead><tr><th>週</th><th>在庫番号</th><th>備考</th><th></th></tr></thead>
+              <tbody id="dashContractBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="dashContractEmpty" style="display:none;">登録された成約車両がありません</div>
         </div>
 
         <div class="card">
           <h2>入札会エントリー</h2>
+          <div class="cat-tabs" id="auctionTabs"></div>
           <div id="dashAuctionList" style="max-height:340px;overflow-y:auto;"></div>
         </div>
       </div>
@@ -713,24 +732,19 @@
     });
   }
 
-  function renderContractLists(){
-    const sorted = contracted.slice().sort((a,b)=> a.week.localeCompare(b.week));
-    const html = (sorted.length===0)
+  function renderSidebarLists(){
+    // 成約車両（入力フォームタブのクイック一覧）
+    const sortedC = contracted.slice().sort((a,b)=> a.week.localeCompare(b.week));
+    document.getElementById('contractList').innerHTML = (sortedC.length===0)
       ? '<div class="empty">登録された成約車両がありません</div>'
-      : sorted.map(c=>`
+      : sortedC.map(c=>`
         <div class="small-list-item">
           <span><span class="week-tag">${escapeHtml(c.week)}</span> <span class="stockno">${escapeHtml(c.stock_no)}</span> ${escapeHtml(c.note)}</span>
           <button data-ctdel="${c.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
         </div>`).join('');
-    document.getElementById('contractList').innerHTML = html;
-    document.getElementById('dashContractList').innerHTML = html || '<div class="empty">登録された成約車両がありません</div>';
-    document.querySelectorAll('[data-ctdel]').forEach(btn=>{
-      btn.addEventListener('click', ()=> deleteContract(btn.getAttribute('data-ctdel')));
-    });
-  }
 
-  function renderAuctionLists(){
-    const html = (auctions.length===0)
+    // 入札会（入力フォームタブのクイック一覧）
+    document.getElementById('auctionList').innerHTML = (auctions.length===0)
       ? '<div class="empty">登録された入札会エントリーがありません</div>'
       : auctions.map(a=>`
         <div class="small-list-item" style="align-items:flex-start;">
@@ -742,17 +756,130 @@
           </span>
           <button data-audel="${a.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
         </div>`).join('');
-    document.getElementById('auctionList').innerHTML = html;
-    document.getElementById('dashAuctionList').innerHTML = html || '<div class="empty">登録された入札会エントリーがありません</div>';
+
+    document.querySelectorAll('[data-ctdel]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteContract(btn.getAttribute('data-ctdel')));
+    });
     document.querySelectorAll('[data-audel]').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteAuction(btn.getAttribute('data-audel')));
     });
   }
 
+  // ---------- 成約車両（ダッシュボード：週タブ＋表） ----------
+  const WEEKS = ['1週目','2週目','3週目','4週目','5週目'];
+  let activeWeek = '';
+
+  function renderContractTabs(){
+    const el = document.getElementById('contractTabs');
+    const counts = {};
+    WEEKS.forEach(w=>counts[w]=0);
+    contracted.forEach(c=>{ if(counts[c.week]!==undefined) counts[c.week]++; });
+    const tabs = [{label:'すべて', value:'', count: contracted.length}]
+      .concat(WEEKS.map(w=>({label:w, value:w, count:counts[w]})));
+    el.innerHTML = tabs.map(t => `
+      <button class="cat-tab-btn ${t.value===activeWeek?'active':''}" data-week="${escapeHtml(t.value)}">
+        ${escapeHtml(t.label)}<span class="cnt">${t.count}</span>
+      </button>
+    `).join('');
+    el.querySelectorAll('[data-week]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeWeek = btn.getAttribute('data-week');
+        renderContractTabs();
+        renderContractTable();
+      });
+    });
+  }
+
+  function renderContractTable(){
+    let list = contracted.slice();
+    if(activeWeek) list = list.filter(c=>c.week===activeWeek);
+    list.sort((a,b)=> a.week.localeCompare(b.week));
+    const body = document.getElementById('dashContractBody');
+    document.getElementById('dashContractEmpty').style.display = list.length? 'none':'block';
+    body.innerHTML = list.map(c=>`
+      <tr>
+        <td><span class="week-tag">${escapeHtml(c.week)}</span></td>
+        <td class="stockno">${escapeHtml(c.stock_no)}</td>
+        <td class="cust">${escapeHtml(c.note)}</td>
+        <td class="row-actions"><button data-dctdel="${c.id}">削除</button></td>
+      </tr>
+    `).join('');
+    body.querySelectorAll('[data-dctdel]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteContract(btn.getAttribute('data-dctdel')));
+    });
+  }
+
+  // ---------- 入札会（ダッシュボード：店舗タブ＋一覧） ----------
+  const STORES = ['北海道','宮城','福島','東京','新潟','愛知','大阪','岡山','福岡','リース'];
+  let activeStore = '';
+
+  function renderAuctionTabs(){
+    const el = document.getElementById('auctionTabs');
+    const counts = {};
+    STORES.forEach(s=>counts[s]=0);
+    auctions.forEach(a=>{ if(counts[a.store]!==undefined) counts[a.store]++; });
+    const tabs = [{label:'すべて', value:'', count: auctions.length}]
+      .concat(STORES.map(s=>({label:s, value:s, count:counts[s]})));
+    el.innerHTML = tabs.map(t => `
+      <button class="cat-tab-btn ${t.value===activeStore?'active':''}" data-store="${escapeHtml(t.value)}">
+        ${escapeHtml(t.label)}<span class="cnt">${t.count}</span>
+      </button>
+    `).join('');
+    el.querySelectorAll('[data-store]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeStore = btn.getAttribute('data-store');
+        renderAuctionTabs();
+        renderAuctionDashList();
+      });
+    });
+  }
+
+  function renderAuctionDashList(){
+    let list = auctions.slice();
+    if(activeStore) list = list.filter(a=>a.store===activeStore);
+    const el = document.getElementById('dashAuctionList');
+    el.innerHTML = (list.length===0)
+      ? '<div class="empty">登録された入札会エントリーがありません</div>'
+      : list.map(a=>`
+        <div class="small-list-item" style="align-items:flex-start;">
+          <span>
+            <span class="cat-tag">${escapeHtml(a.store)}</span>
+            <b>${escapeHtml(a.venue)}</b><br>
+            <span class="cust">${escapeHtml(a.stock_nos)}</span>
+            ${a.note? '<br><span class="cust">'+escapeHtml(a.note)+'</span>' : ''}
+          </span>
+          <button data-audel2="${a.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
+        </div>`).join('');
+    el.querySelectorAll('[data-audel2]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteAuction(btn.getAttribute('data-audel2')));
+    });
+  }
+
   // ---------- dashboard ----------
-  function populateCategoryFilter(){
-    const sel = document.getElementById('filterCategory');
-    sel.innerHTML = '<option value="">全カテゴリ</option>' + CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  let activeCategory = ''; // '' = すべて
+
+  function renderCategoryTabs(){
+    const el = document.getElementById('categoryTabs');
+    const counts = {};
+    CATS.forEach(c=>counts[c]=0);
+    deals.forEach(d=>{ if(counts[d.category]!==undefined) counts[d.category]++; });
+
+    const tabs = [{label:'すべて', value:'', count: deals.length}]
+      .concat(CATS.map(c=>({label:c, value:c, count:counts[c]})));
+
+    el.innerHTML = tabs.map(t => `
+      <button class="cat-tab-btn ${t.value===activeCategory?'active':''}" data-cat="${escapeHtml(t.value)}">
+        ${escapeHtml(t.label)}<span class="cnt">${t.count}</span>
+      </button>
+    `).join('');
+
+    el.querySelectorAll('[data-cat]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeCategory = btn.getAttribute('data-cat');
+        renderCategoryTabs();
+        renderTable();
+      });
+    });
   }
 
   function renderStats(){
@@ -808,7 +935,7 @@
 
   function renderTable(){
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
-    const fc = document.getElementById('filterCategory').value;
+    const fc = activeCategory;
     const fh = document.getElementById('filterHot').value;
     let list = deals.slice();
     if(fc) list = list.filter(d=>d.category===fc);
@@ -857,10 +984,14 @@
     renderStats();
     renderDeadlines();
     renderCatBars();
+    renderCategoryTabs();
     renderTable();
     renderQuickList();
-    renderContractLists();
-    renderAuctionLists();
+    renderSidebarLists();
+    renderContractTabs();
+    renderContractTable();
+    renderAuctionTabs();
+    renderAuctionDashList();
   }
 
   // ---------- export / backup ----------
@@ -906,7 +1037,6 @@
 
   async function init(){
     initTabs();
-    populateCategoryFilter();
     resetForm();
     tickClock();
     setInterval(tickClock, 30000);
@@ -915,7 +1045,6 @@
     document.getElementById('clearBtn').addEventListener('click', resetForm);
     document.getElementById('quickSearch').addEventListener('input', renderQuickList);
     document.getElementById('searchInput').addEventListener('input', renderTable);
-    document.getElementById('filterCategory').addEventListener('change', renderTable);
     document.getElementById('filterHot').addEventListener('change', renderTable);
     document.getElementById('contractForm').addEventListener('submit', handleContractSubmit);
     document.getElementById('auctionForm').addEventListener('submit', handleAuctionSubmit);
