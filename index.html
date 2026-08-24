@@ -79,6 +79,8 @@
     padding:9px 10px;border-radius:6px;font-family:var(--sans);font-size:16px;
   }
   .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-pale);}
+  .field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.8);cursor:pointer;}
+  .field input[type=date]{color-scheme:dark;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   textarea{resize:vertical;min-height:44px;}
@@ -600,6 +602,13 @@
   }
 
   // ---------- deal form ----------
+  function todayStr(){
+    const d = new Date();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return d.getFullYear()+'-'+mm+'-'+dd;
+  }
+
   function resetForm(){
     editingId = null;
     document.getElementById('f_id').value='';
@@ -607,7 +616,7 @@
     document.getElementById('f_stock_no').value='';
     document.getElementById('f_vehicle').value='';
     document.getElementById('f_hot').value='1';
-    document.getElementById('f_deal_date').value='';
+    document.getElementById('f_deal_date').value=todayStr();
     document.getElementById('f_deadline_note').value='';
     document.getElementById('f_c1').value='';
     document.getElementById('f_c2').value='';
@@ -762,16 +771,25 @@
       return;
     }
     el.innerHTML = list.map(d => `
-      <div class="dl-item" style="cursor:pointer" data-id="${d.id}">
-        <span>${hotLabel(d.hot)} <span class="stockno">${escapeHtml(d.stock_no)}</span> ${escapeHtml(d.vehicle)}</span>
-        <span class="cust">${escapeHtml((d.customer1||'').slice(0,16))}</span>
+      <div class="dl-item" data-id="${d.id}">
+        <span style="cursor:pointer;" data-edit-hit="${d.id}">${hotLabel(d.hot)} <span class="stockno">${escapeHtml(d.stock_no)}</span> ${escapeHtml(d.vehicle)}</span>
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span class="cust">${escapeHtml((d.customer1||'').slice(0,16))}</span>
+          <button data-qdel="${d.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
+        </span>
       </div>
     `).join('');
-    el.querySelectorAll('[data-id]').forEach(node=>{
+    el.querySelectorAll('[data-edit-hit]').forEach(node=>{
       node.addEventListener('click', ()=>{
-        const id = node.getAttribute('data-id');
+        const id = node.getAttribute('data-edit-hit');
         const deal = deals.find(d=>String(d.id)===String(id));
         if(deal) fillForm(deal);
+      });
+    });
+    el.querySelectorAll('[data-qdel]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        deleteDeal(btn.getAttribute('data-qdel'));
       });
     });
   }
