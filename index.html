@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <title>商談ボード</title>
@@ -28,7 +30,7 @@
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);}
   body{padding:0 0 60px;}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
- 
+
   /* header / board rail */
   .rail{
     background:
@@ -42,7 +44,7 @@
   .brand-sub{color:var(--ink-dim);font-size:15px;margin-top:4px;}
   .clock{font-family:var(--mono);font-size:15px;color:var(--ink-dim);text-align:right;}
   .clock b{color:var(--orange-deep);font-size:17px;display:block;}
- 
+
   /* tabs */
   .tabs{display:flex;gap:2px;margin-top:18px;flex-wrap:wrap;}
   .tab-btn{
@@ -51,10 +53,10 @@
     padding:10px 20px;cursor:pointer;border-radius:6px 6px 0 0;
   }
   .tab-btn.active{background:var(--bg);color:var(--orange-deep);border-color:var(--orange);font-weight:700;}
- 
+
   .panel{display:none;padding:24px 0 0;}
   .panel.active{display:block;}
- 
+
   /* cards */
   .stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px;}
   .stat-card{background:var(--panel-alt);border:1px solid var(--line);border-radius:8px;padding:14px 16px;}
@@ -62,13 +64,13 @@
   .stat-card .l{font-size:13px;color:var(--ink-dim);margin-top:2px;letter-spacing:.04em;}
   .stat-card.warn .n{color:var(--red);}
   .stat-card.ok .n{color:var(--green);}
- 
+
   .grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;align-items:start;}
- 
+
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:18px;}
   .card h2{font-size:16px;margin:0 0 14px;color:var(--orange-deep);letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);font-weight:700;}
   .card h2 span{color:var(--ink-dim);text-transform:none;font-family:var(--sans);font-weight:400;margin-left:8px;font-size:14px;}
- 
+
   /* form */
   .field{margin-bottom:12px;}
   .field label{display:block;font-size:14px;color:var(--ink-dim);margin-bottom:5px;}
@@ -82,7 +84,7 @@
   textarea{resize:vertical;min-height:44px;}
   .customer-block{border-left:3px solid var(--orange-pale);padding-left:12px;margin-top:10px;}
   .section-divider{border-top:1px dashed var(--line);margin:18px 0;}
- 
+
   .btn{
     font-family:var(--sans);font-weight:700;font-size:16px;border:none;border-radius:6px;
     padding:11px 18px;cursor:pointer;
@@ -94,7 +96,7 @@
   .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);}
   .form-actions{display:flex;gap:10px;margin-top:16px;align-items:center;}
   .form-msg{font-size:14px;color:var(--green);margin-left:auto;}
- 
+
   /* HOT badges */
   .hot{
     font-family:var(--mono);font-weight:700;font-size:14px;padding:2px 8px;border-radius:20px;
@@ -107,11 +109,11 @@
   .hot-移動{background:rgba(138,147,160,.10);color:var(--gray);border:1px solid var(--gray);}
   .hot-ラジコン{background:rgba(139,92,246,.10);color:var(--purple);border:1px solid var(--purple);}
   .hot-other{background:rgba(125,142,163,.18);color:var(--ink-dim);border:1px solid var(--line);}
- 
+
   /* legend */
   .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--ink-dim);}
   .legend .item{display:flex;align-items:center;gap:6px;}
- 
+
   /* category tabs (dashboard) */
   .cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
   .cat-tab-btn{
@@ -122,7 +124,7 @@
   .cat-tab-btn:hover{border-color:var(--orange);color:var(--orange-deep);}
   .cat-tab-btn.active{background:var(--orange);color:var(--bg);border-color:var(--orange);font-weight:700;}
   .cat-tab-btn.active .cnt{color:var(--bg);}
- 
+
   /* filters */
   .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
   .filters select,.filters input{
@@ -130,7 +132,7 @@
     padding:8px 10px;border-radius:6px;font-size:15px;
   }
   .filters input[type=text]{flex:1;min-width:180px;}
- 
+
   /* table */
   .table-scroll{max-height:460px;overflow-y:auto;overflow-x:auto;border:1px solid var(--line-soft);border-radius:6px;}
   table{width:100%;border-collapse:collapse;font-size:15px;}
@@ -152,71 +154,71 @@
     font-family:var(--sans);padding:0;
   }
   .row-actions button:hover{color:var(--orange-deep);}
- 
+
   /* deadline list */
   .dl-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:15px;}
   .dl-item:last-child{border-bottom:none;}
   .dl-item .dv{font-family:var(--mono);color:var(--red);font-size:14px;white-space:nowrap;}
- 
+
   /* bars */
   .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:14px;}
   .bar-label{width:70px;color:var(--ink-dim);flex-shrink:0;}
   .bar-track{flex:1;background:var(--orange-paler);border-radius:4px;height:16px;overflow:hidden;border:1px solid var(--line);}
   .bar-fill{height:100%;background:linear-gradient(90deg, #f4b366, var(--orange));}
   .bar-count{width:26px;text-align:right;font-family:var(--mono);color:var(--ink-dim);}
- 
+
   .empty{color:var(--ink-dim);font-size:15px;padding:20px 0;text-align:center;}
   .footnote{color:var(--ink-dim);font-size:13px;margin-top:24px;text-align:center;}
- 
+
   .small-list-item{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:15px;align-items:center;}
   .small-list-item:last-child{border-bottom:none;}
   .week-tag{font-family:var(--mono);font-size:13px;color:var(--orange-deep);background:var(--orange-pale);padding:2px 8px;border-radius:10px;}
- 
+
   @media (max-width: 880px){
     .stat-row{grid-template-columns:repeat(2,1fr);}
     .grid2{grid-template-columns:1fr;}
     .row2,.row3{grid-template-columns:1fr;}
   }
- 
+
   /* ---------- mobile (phone) ---------- */
   @media (max-width: 600px){
     body{padding-bottom:40px;}
     .wrap{padding:0 12px;}
- 
+
     .rail-inner{padding:16px 12px 12px;flex-direction:column;align-items:flex-start;gap:6px;}
     .brand-title{font-size:23px;}
     .brand-sub{font-size:14px;}
     .clock{text-align:left;}
     .clock b{display:inline;font-size:15px;margin-right:8px;}
- 
+
     .tabs{width:100%;margin-top:14px;}
     .tab-btn{flex:1;text-align:center;padding:11px 6px;font-size:14px;}
- 
+
     .panel{padding:16px 0 0;}
     .card{padding:14px 14px;margin-bottom:14px;border-radius:8px;}
     .card h2{font-size:15px;}
     .card h2 #exportBtn, .card h2 button{display:block !important;float:none !important;margin:10px 0 0;width:100%;}
- 
+
     .stat-row{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
     .stat-card{padding:10px 12px;}
     .stat-card .n{font-size:23px;}
     .stat-card .l{font-size:12px;}
- 
+
     .cat-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:12px;}
     .cat-tab-btn{flex-shrink:0;padding:6px 12px;font-size:14px;}
- 
+
     .filters{flex-direction:column;}
     .filters input[type=text],.filters select{width:100%;}
- 
+
     .table-scroll{max-height:400px;}
     table{font-size:14px;}
     thead th{padding:7px 6px;font-size:12px;}
     tbody td{padding:7px 6px;}
- 
+
     .form-actions{flex-wrap:wrap;}
     .btn{width:100%;text-align:center;}
     .form-actions .form-msg{margin-left:0;width:100%;order:3;}
- 
+
     .customer-block{padding-left:10px;}
   }
 </style>
@@ -238,9 +240,9 @@
     </div>
   </div>
 </div>
- 
+
 <div class="wrap">
- 
+
   <!-- FORM PANEL -->
   <div class="panel" id="panel-form">
     <div class="grid2">
@@ -249,7 +251,7 @@
           <h2 id="formTitle">新規商談を登録 <span>在庫番号・車輌・お客様情報を入力してください</span></h2>
           <form id="dealForm">
             <input type="hidden" id="f_id">
- 
+
             <div class="field">
               <label>カテゴリ（分類）</label>
               <select id="f_category">
@@ -265,7 +267,7 @@
                 <option>その他</option>
               </select>
             </div>
- 
+
             <div class="row2">
               <div class="field">
                 <label>在庫番号</label>
@@ -276,7 +278,7 @@
                 <input type="text" id="f_vehicle" placeholder="例）FU74HZ">
               </div>
             </div>
- 
+
             <div class="row2">
               <div class="field">
                 <label>HOT度</label>
@@ -295,12 +297,12 @@
                 <input type="date" id="f_deal_date">
               </div>
             </div>
- 
+
             <div class="field">
               <label>商談期限</label>
               <textarea id="f_deadline_note" placeholder="例）銀行審査 24日まで"></textarea>
             </div>
- 
+
             <div class="customer-block">
               <div class="field">
                 <label>お客様名①</label>
@@ -315,7 +317,7 @@
                 <input type="text" id="f_c3">
               </div>
             </div>
- 
+
             <div class="form-actions">
               <button type="submit" class="btn btn-primary" id="submitBtn">この内容で登録する</button>
               <button type="button" class="btn btn-ghost" id="clearBtn">クリア</button>
@@ -323,7 +325,7 @@
             </div>
           </form>
         </div>
- 
+
         <div class="card">
           <h2>成約車両を登録 <span>ご成約車輌（週次）</span></h2>
           <form id="contractForm">
@@ -354,7 +356,7 @@
             </div>
           </form>
         </div>
- 
+
         <div class="card">
           <h2>入札会エントリーを登録 <span>店舗・会場・出品車輌</span></h2>
           <form id="auctionForm">
@@ -394,7 +396,7 @@
             </div>
           </form>
         </div>
- 
+
         <div class="card">
           <h2>HOT度の凡例</h2>
           <div class="legend">
@@ -407,19 +409,19 @@
           </div>
         </div>
       </div>
- 
+
       <div>
         <div class="card">
           <h2>既存の商談を編集 <span>クリックで呼び出し</span></h2>
           <div class="field"><input type="text" id="quickSearch" placeholder="在庫番号・車輌・お客様名で検索"></div>
           <div id="quickList" style="max-height:340px;overflow:auto;"></div>
         </div>
- 
+
         <div class="card">
           <h2>成約車両一覧</h2>
           <div id="contractList" style="max-height:260px;overflow:auto;"></div>
         </div>
- 
+
         <div class="card">
           <h2>入札会エントリー一覧</h2>
           <div id="auctionList" style="max-height:260px;overflow:auto;"></div>
@@ -427,11 +429,11 @@
       </div>
     </div>
   </div>
- 
+
   <!-- DASHBOARD PANEL -->
   <div class="panel active" id="panel-dash">
     <div class="stat-row" id="statRow"></div>
- 
+
     <div class="grid2">
       <div>
         <div class="card">
@@ -461,7 +463,7 @@
           </div>
           <div class="empty" id="tableEmpty" style="display:none;">該当する商談がありません</div>
         </div>
- 
+
         <div class="card">
           <h2>成約車両（週次）</h2>
           <div class="cat-tabs" id="contractTabs"></div>
@@ -473,14 +475,14 @@
           </div>
           <div class="empty" id="dashContractEmpty" style="display:none;">登録された成約車両がありません</div>
         </div>
- 
+
         <div class="card">
           <h2>入札会エントリー</h2>
           <div class="cat-tabs" id="auctionTabs"></div>
           <div id="dashAuctionList" style="max-height:340px;overflow-y:auto;"></div>
         </div>
       </div>
- 
+
       <div>
         <div class="card">
           <h2>期限が近い商談</h2>
@@ -493,25 +495,25 @@
       </div>
     </div>
   </div>
- 
+
   <p class="footnote">BAR3TREES / Shima Shokai 業務ツール &middot; v1.0 &middot; データはGoogleスプレッドシートに保存され、アクセスした全員で共有されます</p>
 </div>
- 
+
 <script>
 (function(){
   // ▼▼▼ ここに Google Apps Script の「ウェブアプリ」デプロイURLを貼り付けてください ▼▼▼
   // 例）https://script.google.com/macros/s/AKfycbxxxxxxxxxxxxxxxx/exec
   const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzPmLYV_xKV8Z5yzSk8OgJOTqe0YpjeWkVpZFDubBR0WKi8eWfPRDpuCQE2E4NlKmRXNQ/exec';
   // ▲▲▲ ここまで ▲▲▲
- 
+
   let deals = [];
   let contracted = [];
   let auctions = [];
   let editingId = null;
   let apiReady = GAS_API_URL && GAS_API_URL.indexOf('https://') === 0;
- 
+
   const CATS = ['平ボディ','クレーン','ダンプ','セルフ','バン','ウイング','冷蔵冷凍','トラクタ','新車','その他'];
- 
+
   // ---------- API (Google Apps Script backend) ----------
   async function apiGet(type){
     const res = await fetch(GAS_API_URL + '?type=' + encodeURIComponent(type));
@@ -539,7 +541,7 @@
     if(!json.ok) throw new Error(json.error || 'API error');
     return json.result;
   }
- 
+
   async function loadAll(){
     if(!apiReady){
       showApiWarning();
@@ -554,7 +556,7 @@
       showApiWarning('データの取得に失敗しました: ' + e.message);
     }
   }
- 
+
   function showApiWarning(msg){
     const text = msg || 'GAS_API_URL が未設定です。app.js 内の GAS_API_URL に、デプロイしたウェブアプリのURLを貼り付けてください。';
     const box = document.createElement('div');
@@ -562,7 +564,7 @@
     box.textContent = '⚠ ' + text;
     document.querySelector('.wrap').prepend(box);
   }
- 
+
   // ---------- helpers ----------
   function hotClass(h){
     if(['AA','5','3','1','移動','ラジコン'].includes(h)) return 'hot-'+h;
@@ -596,7 +598,7 @@
     el.style.color = isErr ? 'var(--red)' : 'var(--green)';
     if(text){ setTimeout(()=>{ if(el.textContent===text) el.textContent=''; }, 3500); }
   }
- 
+
   // ---------- deal form ----------
   function resetForm(){
     editingId = null;
@@ -613,7 +615,7 @@
     document.getElementById('formTitle').innerHTML = '新規商談を登録 <span>在庫番号・車輌・お客様情報を入力してください</span>';
     document.getElementById('submitBtn').textContent = 'この内容で登録する';
   }
- 
+
   function fillForm(deal){
     editingId = deal.id;
     document.getElementById('f_id').value = deal.id;
@@ -631,7 +633,7 @@
     document.querySelector('[data-tab="form"]').click();
     window.scrollTo({top:0, behavior:'smooth'});
   }
- 
+
   async function handleSubmit(e){
     e.preventDefault();
     if(!apiReady){ showApiWarning(); return; }
@@ -669,7 +671,7 @@
       setMsg('formMsg', '保存に失敗しました: ' + err.message, true);
     }
   }
- 
+
   async function deleteDeal(id){
     if(!confirm('この商談を削除しますか？')) return;
     try{
@@ -678,7 +680,7 @@
       renderAll();
     }catch(err){ console.error(err); alert('削除に失敗しました: ' + err.message); }
   }
- 
+
   // ---------- contracted vehicles ----------
   async function handleContractSubmit(e){
     e.preventDefault();
@@ -702,7 +704,7 @@
       setMsg('ctMsg', '保存に失敗しました: ' + err.message, true);
     }
   }
- 
+
   async function deleteContract(id){
     if(!confirm('この成約車両を削除しますか？')) return;
     try{
@@ -711,7 +713,7 @@
       renderAll();
     }catch(err){ console.error(err); alert('削除に失敗しました: ' + err.message); }
   }
- 
+
   // ---------- auctions ----------
   async function handleAuctionSubmit(e){
     e.preventDefault();
@@ -736,7 +738,7 @@
       setMsg('auMsg', '保存に失敗しました: ' + err.message, true);
     }
   }
- 
+
   async function deleteAuction(id){
     if(!confirm('この入札会エントリーを削除しますか？')) return;
     try{
@@ -745,7 +747,7 @@
       renderAll();
     }catch(err){ console.error(err); alert('削除に失敗しました: ' + err.message); }
   }
- 
+
   // ---------- quick list (form tab) ----------
   function renderQuickList(){
     const q = document.getElementById('quickSearch').value.trim().toLowerCase();
@@ -773,7 +775,7 @@
       });
     });
   }
- 
+
   function renderSidebarLists(){
     // 成約車両（入力フォームタブのクイック一覧）
     const sortedC = contracted.slice().sort((a,b)=> a.week.localeCompare(b.week));
@@ -784,7 +786,7 @@
           <span><span class="week-tag">${escapeHtml(c.week)}</span> <span class="stockno">${escapeHtml(c.stock_no)}</span> ${escapeHtml(c.note)}</span>
           <button data-ctdel="${c.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
         </div>`).join('');
- 
+
     // 入札会（入力フォームタブのクイック一覧）
     document.getElementById('auctionList').innerHTML = (auctions.length===0)
       ? '<div class="empty">登録された入札会エントリーがありません</div>'
@@ -798,7 +800,7 @@
           </span>
           <button data-audel="${a.id}" style="background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:12px;text-decoration:underline;">削除</button>
         </div>`).join('');
- 
+
     document.querySelectorAll('[data-ctdel]').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteContract(btn.getAttribute('data-ctdel')));
     });
@@ -806,11 +808,11 @@
       btn.addEventListener('click', ()=> deleteAuction(btn.getAttribute('data-audel')));
     });
   }
- 
+
   // ---------- 成約車両（ダッシュボード：週タブ＋表） ----------
   const WEEKS = ['1週目','2週目','3週目','4週目','5週目'];
   let activeWeek = '';
- 
+
   function renderContractTabs(){
     const el = document.getElementById('contractTabs');
     const counts = {};
@@ -831,7 +833,7 @@
       });
     });
   }
- 
+
   function renderContractTable(){
     let list = contracted.slice();
     if(activeWeek) list = list.filter(c=>c.week===activeWeek);
@@ -850,11 +852,11 @@
       btn.addEventListener('click', ()=> deleteContract(btn.getAttribute('data-dctdel')));
     });
   }
- 
+
   // ---------- 入札会（ダッシュボード：店舗タブ＋一覧） ----------
   const STORES = ['北海道','宮城','福島','東京','新潟','愛知','大阪','岡山','福岡','リース'];
   let activeStore = '';
- 
+
   function renderAuctionTabs(){
     const el = document.getElementById('auctionTabs');
     const counts = {};
@@ -875,7 +877,7 @@
       });
     });
   }
- 
+
   function renderAuctionDashList(){
     let list = auctions.slice();
     if(activeStore) list = list.filter(a=>a.store===activeStore);
@@ -896,25 +898,25 @@
       btn.addEventListener('click', ()=> deleteAuction(btn.getAttribute('data-audel2')));
     });
   }
- 
+
   // ---------- dashboard ----------
   let activeCategory = ''; // '' = すべて
- 
+
   function renderCategoryTabs(){
     const el = document.getElementById('categoryTabs');
     const counts = {};
     CATS.forEach(c=>counts[c]=0);
     deals.forEach(d=>{ if(counts[d.category]!==undefined) counts[d.category]++; });
- 
+
     const tabs = [{label:'すべて', value:'', count: deals.length}]
       .concat(CATS.map(c=>({label:c, value:c, count:counts[c]})));
- 
+
     el.innerHTML = tabs.map(t => `
       <button class="cat-tab-btn ${t.value===activeCategory?'active':''}" data-cat="${escapeHtml(t.value)}">
         ${escapeHtml(t.label)}<span class="cnt">${t.count}</span>
       </button>
     `).join('');
- 
+
     el.querySelectorAll('[data-cat]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         activeCategory = btn.getAttribute('data-cat');
@@ -923,7 +925,7 @@
       });
     });
   }
- 
+
   function renderStats(){
     const total = deals.length;
     const hotCount = h => deals.filter(d=>d.hot===h).length;
@@ -946,7 +948,7 @@
       <div class="stat-card ${c.cls}"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>
     `).join('');
   }
- 
+
   function renderDeadlines(){
     const withDates = deals.filter(d=>d.deal_date).map(d=>({...d, n: daysUntil(d.deal_date)}))
       .sort((a,b)=>a.n-b.n).slice(0,10);
@@ -959,7 +961,7 @@
       </div>
     `).join('');
   }
- 
+
   function renderCatBars(){
     const counts = {};
     CATS.forEach(c=>counts[c]=0);
@@ -974,7 +976,7 @@
       </div>
     `).join('');
   }
- 
+
   function renderTable(){
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     const fc = activeCategory;
@@ -983,11 +985,11 @@
     if(fc) list = list.filter(d=>d.category===fc);
     if(fh) list = list.filter(d=>d.hot===fh);
     if(q) list = list.filter(d => [d.stock_no,d.vehicle,d.customer1,d.customer2,d.customer3,d.deadline_note].join(' ').toLowerCase().includes(q));
- 
+
     document.getElementById('tableCount').textContent = `全 ${list.length} 件 / 総 ${deals.length} 件`;
     const body = document.getElementById('tableBody');
     document.getElementById('tableEmpty').style.display = list.length? 'none':'block';
- 
+
     body.innerHTML = list.map(d=>{
       const n = daysUntil(d.deal_date);
       const soonCls = (n!==null && n<=3) ? 'deadline-soon' : '';
@@ -1007,7 +1009,7 @@
         </td>
       </tr>`;
     }).join('');
- 
+
     body.querySelectorAll('[data-edit]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const id = btn.getAttribute('data-edit');
@@ -1021,7 +1023,7 @@
       });
     });
   }
- 
+
   function renderAll(){
     renderStats();
     renderDeadlines();
@@ -1035,7 +1037,7 @@
     renderAuctionTabs();
     renderAuctionDashList();
   }
- 
+
   // ---------- export / backup ----------
   function handleExport(){
     const payload = {
@@ -1053,7 +1055,7 @@
     a.remove();
     URL.revokeObjectURL(url);
   }
- 
+
   // ---------- clock ----------
   function tickClock(){
     const now = new Date();
@@ -1063,7 +1065,7 @@
     document.getElementById('clockDate').textContent =
       now.getFullYear()+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
   }
- 
+
   // ---------- tabs ----------
   function initTabs(){
     document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -1076,13 +1078,13 @@
       });
     });
   }
- 
+
   async function init(){
     initTabs();
     resetForm();
     tickClock();
     setInterval(tickClock, 30000);
- 
+
     document.getElementById('dealForm').addEventListener('submit', handleSubmit);
     document.getElementById('clearBtn').addEventListener('click', resetForm);
     document.getElementById('quickSearch').addEventListener('input', renderQuickList);
@@ -1091,14 +1093,14 @@
     document.getElementById('contractForm').addEventListener('submit', handleContractSubmit);
     document.getElementById('auctionForm').addEventListener('submit', handleAuctionSubmit);
     document.getElementById('exportBtn').addEventListener('click', handleExport);
- 
+
     await loadAll();
     renderAll();
   }
- 
+
   init();
 })();
- 
+
 </script>
 </body>
 </html>
