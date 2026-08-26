@@ -176,6 +176,37 @@
   .small-list-item:last-child{border-bottom:none;}
   .week-tag{font-family:var(--mono);font-size:13px;color:var(--orange-deep);background:var(--orange-pale);padding:2px 8px;border-radius:10px;}
 
+  /* bottom mobile nav (hidden on desktop) */
+  .bottom-nav{
+    display:none;position:fixed;left:0;right:0;bottom:0;z-index:100;
+    background:var(--bg-alt);border-top:2px solid var(--orange);
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  .bn-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    background:transparent;border:none;color:var(--ink-dim);padding:8px 4px;border-radius:8px;font-size:11px;
+  }
+  .bn-btn.active{color:var(--orange);background:var(--orange-paler);}
+  .bn-icon{font-size:19px;line-height:1;}
+
+  /* mobile card list (deals / contracted) — hidden on desktop */
+  .mobile-cards{display:none;}
+  .deal-card{
+    background:var(--bg-alt);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;
+  }
+  .deal-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
+  .deal-card-title{font-family:var(--mono);font-weight:700;color:var(--orange);font-size:17px;}
+  .deal-card-sub{color:var(--ink-dim);font-size:14px;margin-bottom:6px;}
+  .deal-card-row{font-size:14px;color:var(--ink-dim);margin-bottom:3px;}
+  .deal-card-row b{color:var(--ink);font-weight:700;}
+  .deal-card-cust{font-size:14px;margin:2px 0;}
+  .deal-card-actions{display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-soft);}
+  .deal-card-actions button{
+    flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:8px;border-radius:6px;font-size:13px;font-family:var(--sans);
+  }
+  .deal-card-actions button.dc-del{color:var(--red);border-color:var(--red);background:transparent;}
+
   @media (max-width: 880px){
     .stat-row{grid-template-columns:repeat(2,1fr);}
     .grid2{grid-template-columns:1fr;}
@@ -184,44 +215,54 @@
 
   /* ---------- mobile (phone) ---------- */
   @media (max-width: 600px){
-    body{padding-bottom:40px;}
+    body{padding-bottom:84px;}
     .wrap{padding:0 12px;}
 
-    .rail-inner{padding:16px 12px 12px;flex-direction:column;align-items:flex-start;gap:6px;}
-    .brand-title{font-size:23px;}
-    .brand-sub{font-size:14px;}
-    .clock{text-align:left;}
-    .clock b{display:inline;font-size:15px;margin-right:8px;}
+    .rail{padding-bottom:2px;}
+    .rail-inner{padding:14px 12px 10px;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;}
+    .brand-eyebrow{display:none;}
+    .brand-title{font-size:19px;}
+    .brand-title span{font-size:10px !important;padding:1px 6px !important;}
+    .brand-sub{display:none;}
+    .clock{text-align:right;}
+    .clock b{font-size:14px;}
 
-    .tabs{width:100%;margin-top:14px;}
-    .tab-btn{flex:1;text-align:center;padding:11px 6px;font-size:14px;}
+    .tabs{display:none;}
+    .bottom-nav{display:flex;}
 
-    .panel{padding:16px 0 0;}
-    .card{padding:14px 14px;margin-bottom:14px;border-radius:8px;}
-    .card h2{font-size:15px;}
+    .panel{padding:14px 0 0;}
+    .card{padding:13px 13px;margin-bottom:12px;border-radius:10px;}
+    .card h2{font-size:14px;}
     .card h2 #exportBtn, .card h2 button{display:block !important;float:none !important;margin:10px 0 0;width:100%;}
 
-    .stat-row{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
-    .stat-card{padding:10px 12px;}
-    .stat-card .n{font-size:23px;}
-    .stat-card .l{font-size:12px;}
+    .stat-row{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:8px;margin-bottom:14px;scroll-snap-type:x mandatory;padding-bottom:2px;}
+    .stat-card{min-width:118px;flex-shrink:0;padding:10px 12px;scroll-snap-align:start;}
+    .stat-card .n{font-size:21px;}
+    .stat-card .l{font-size:11px;}
 
     .cat-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:12px;}
-    .cat-tab-btn{flex-shrink:0;padding:6px 12px;font-size:14px;}
+    .cat-tab-btn{flex-shrink:0;padding:7px 13px;font-size:13px;}
 
     .filters{flex-direction:column;}
     .filters input[type=text],.filters select{width:100%;}
 
-    .table-scroll{max-height:400px;}
-    table{font-size:14px;}
-    thead th{padding:7px 6px;font-size:12px;}
-    tbody td{padding:7px 6px;}
+    /* main deal list becomes cards on mobile */
+    .table-scroll{display:none;}
+    .mobile-cards{display:block;}
+
+    /* contracted-vehicle table stays compact table, but tighter */
+    table{font-size:13px;}
+    thead th{padding:6px 5px;font-size:11px;}
+    tbody td{padding:6px 5px;}
 
     .form-actions{flex-wrap:wrap;}
     .btn{width:100%;text-align:center;}
     .form-actions .form-msg{margin-left:0;width:100%;order:3;}
 
     .customer-block{padding-left:10px;}
+
+    .dl-item{flex-wrap:wrap;row-gap:4px;}
+    .small-list-item{flex-wrap:wrap;row-gap:4px;}
   }
 </style>
 </head>
@@ -242,6 +283,11 @@
     </div>
   </div>
 </div>
+
+<nav class="bottom-nav">
+  <button class="tab-btn bn-btn active" data-tab="dash"><span class="bn-icon">▤</span><span>ダッシュボード</span></button>
+  <button class="tab-btn bn-btn" data-tab="form"><span class="bn-icon">＋</span><span>入力</span></button>
+</nav>
 
 <div class="wrap">
 
@@ -463,6 +509,7 @@
             <tbody id="tableBody"></tbody>
           </table>
           </div>
+          <div class="mobile-cards" id="tableCardsMobile"></div>
           <div class="empty" id="tableEmpty" style="display:none;">該当する商談がありません</div>
         </div>
 
@@ -1040,6 +1087,42 @@
         deleteDeal(btn.getAttribute('data-del'));
       });
     });
+
+    // ---- mobile card list (same filtered data) ----
+    const cardsEl = document.getElementById('tableCardsMobile');
+    cardsEl.innerHTML = list.map(d=>{
+      const n = daysUntil(d.deal_date);
+      const soonCls = (n!==null && n<=3) ? 'deadline-soon' : '';
+      const custs = [d.customer1,d.customer2,d.customer3].filter(Boolean).map(c=>`<div class="deal-card-cust">・${escapeHtml(c)}</div>`).join('');
+      return `
+      <div class="deal-card">
+        <div class="deal-card-top">
+          <span class="deal-card-title">${escapeHtml(d.stock_no)}</span>
+          ${hotLabel(d.hot)}
+        </div>
+        <div class="deal-card-sub"><span class="cat-tag">${escapeHtml(d.category)}</span> ${escapeHtml(d.vehicle)}</div>
+        <div class="deal-card-row ${soonCls}"><b>商談日：</b>${fmtDate(d.deal_date) || '-'}</div>
+        ${d.deadline_note ? `<div class="deal-card-row"><b>期限：</b>${escapeHtml(d.deadline_note)}</div>` : ''}
+        ${custs}
+        <div class="deal-card-actions">
+          <button data-mcedit="${d.id}">編集</button>
+          <button class="dc-del" data-mcdel="${d.id}">削除</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    cardsEl.querySelectorAll('[data-mcedit]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-mcedit');
+        const deal = deals.find(d=>String(d.id)===String(id));
+        if(deal) fillForm(deal);
+      });
+    });
+    cardsEl.querySelectorAll('[data-mcdel]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        deleteDeal(btn.getAttribute('data-mcdel'));
+      });
+    });
   }
 
   function renderAll(){
@@ -1084,15 +1167,16 @@
       now.getFullYear()+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
   }
 
-  // ---------- tabs ----------
+  // ---------- tabs (top tabs + bottom mobile nav, kept in sync) ----------
   function initTabs(){
     document.querySelectorAll('.tab-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
         document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
-        if(btn.dataset.tab==='dash') renderAll();
+        document.getElementById('panel-'+tab).classList.add('active');
+        if(tab==='dash') renderAll();
+        window.scrollTo({top:0, behavior:'smooth'});
       });
     });
   }
