@@ -124,6 +124,7 @@
     font-size:14px;padding:2px 9px 2px 7px;border-radius:20px;
     background:var(--panel-alt);border:1px solid var(--line);color:var(--ink-dim);
   }
+  .store-badge{max-width:100%;overflow:hidden;vertical-align:middle;}
   .store-badge .dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.18) inset;}
   .store-badge.none{opacity:.55;}
   .store-badge.none .dot{background:transparent;border:1px dashed var(--ink-dim);box-shadow:none;}
@@ -170,16 +171,21 @@
   tbody td{padding:10px 8px;border-bottom:1px solid var(--line-soft);vertical-align:middle;word-break:break-word;line-height:1.5;}
   tbody td.cust{vertical-align:top;}
   tbody tr:hover{background:var(--panel-alt);}
-  /* 在庫番号は基準より3ポイント大きく、色はオレンジ */
+  /* 在庫番号は基準サイズ・オレンジ */
   .stockno{
-    font-family:var(--mono);color:var(--orange);font-size:18px;
+    font-family:var(--mono);color:var(--orange);font-size:15px;
     white-space:nowrap;          /* 途中で折り返して段が崩れるのを防ぐ */
     display:inline-block;vertical-align:middle;line-height:1.25;
   }
   .hot{vertical-align:middle;}
   .cust{font-size:14px;color:var(--ink-dim);}
   .cust b{color:var(--ink);}
-  .cat-tag{font-size:13px;color:var(--ink-dim);border:1px solid var(--line);padding:1px 8px;border-radius:10px;white-space:nowrap;background:var(--panel-alt);}
+  .cat-tag{
+    display:inline-block;max-width:100%;
+    font-size:13px;color:var(--ink-dim);border:1px solid var(--line);
+    padding:1px 8px;border-radius:10px;white-space:nowrap;background:var(--panel-alt);
+    overflow:hidden;text-overflow:ellipsis;vertical-align:middle;
+  }
   .deadline-soon{color:var(--red);}
   .row-actions{white-space:nowrap;}
   .row-actions button{
@@ -189,9 +195,9 @@
   .row-actions button:hover{color:var(--navy);}
 
   /* 列幅：商談日を削除した分をお客様欄に加算 */
-  col.c-cat{width:7%;}  col.c-store{width:9%;}  col.c-stock{width:11%;}
+  col.c-cat{width:10%;} col.c-store{width:12%;} col.c-stock{width:8%;}
   col.c-vehicle{width:9%;} col.c-hot{width:6%;}  col.c-rep{width:8%;}
-  col.c-cust{width:27%;} col.c-note{width:15%;} col.c-act{width:8%;}
+  col.c-cust{width:25%;} col.c-note{width:14%;} col.c-act{width:8%;}
 
   .dl-item{display:flex;justify-content:space-between;align-items:center;gap:8px;row-gap:4px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:15px;}
   .dl-item > span{min-width:0;}
@@ -234,7 +240,7 @@
     box-shadow:0 1px 2px rgba(30,58,95,.05);
   }
   .deal-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
-  .deal-card-title{font-family:var(--mono);color:var(--orange);font-size:20px;white-space:nowrap;}
+  .deal-card-title{font-family:var(--mono);color:var(--orange);font-size:17px;white-space:nowrap;}
   .deal-card-sub{color:var(--ink-dim);font-size:14px;margin-bottom:6px;}
   .deal-card-row{font-size:14px;color:var(--ink-dim);margin-bottom:3px;}
   .deal-card-row b{color:var(--ink);}
@@ -281,7 +287,7 @@
     .table-scroll{display:none;}
     .mobile-cards{display:block;}
     .deal-card{padding:13px 14px;margin-bottom:12px;}
-    .deal-card-title{font-size:24px;}
+    .deal-card-title{font-size:21px;}
     .deal-card-sub{font-size:16px;}
     .deal-card-row{font-size:16px;line-height:1.5;}
     .deal-card-cust{font-size:16px;line-height:1.5;}
@@ -296,7 +302,7 @@
     .week-tag,.cat-tag{font-size:13px;}
     .hot{font-size:14px;}
     .store-badge{font-size:13px;}
-    .stockno{font-size:19px;}
+    .stockno{font-size:16px;}
     .empty{font-size:15px;}
     .footnote{font-size:12px;}
   }
