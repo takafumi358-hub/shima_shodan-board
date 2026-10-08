@@ -23,6 +23,8 @@
     --blue:#2f6fe0;
     --purple:#7c5cd6;
     --amber:#d98324;
+    --orange:#e8720c;
+    --orange-deep:#c25c05;
     --gray:#78889b;
     --mono: 'SFMono-Regular', Consolas, 'Courier New', monospace;
     --sans: -apple-system, 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', 'Segoe UI', sans-serif;
@@ -165,10 +167,16 @@
     border-bottom:1px solid var(--line);padding:9px 8px;white-space:nowrap;
     position:sticky;top:0;background:var(--panel-alt);z-index:1;
   }
-  tbody td{padding:9px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top;word-break:break-word;}
+  tbody td{padding:10px 8px;border-bottom:1px solid var(--line-soft);vertical-align:middle;word-break:break-word;line-height:1.5;}
+  tbody td.cust{vertical-align:top;}
   tbody tr:hover{background:var(--panel-alt);}
-  /* 在庫番号は基準より3ポイント大きく */
-  .stockno{font-family:var(--mono);color:var(--navy);font-size:18px;}
+  /* 在庫番号は基準より3ポイント大きく、色はオレンジ */
+  .stockno{
+    font-family:var(--mono);color:var(--orange);font-size:18px;
+    white-space:nowrap;          /* 途中で折り返して段が崩れるのを防ぐ */
+    display:inline-block;vertical-align:middle;line-height:1.25;
+  }
+  .hot{vertical-align:middle;}
   .cust{font-size:14px;color:var(--ink-dim);}
   .cust b{color:var(--ink);}
   .cat-tag{font-size:13px;color:var(--ink-dim);border:1px solid var(--line);padding:1px 8px;border-radius:10px;white-space:nowrap;background:var(--panel-alt);}
@@ -181,11 +189,12 @@
   .row-actions button:hover{color:var(--navy);}
 
   /* 列幅：商談日を削除した分をお客様欄に加算 */
-  col.c-cat{width:8%;} col.c-store{width:9%;} col.c-stock{width:9%;}
-  col.c-vehicle{width:10%;} col.c-hot{width:7%;} col.c-rep{width:8%;}
-  col.c-cust{width:28%;} col.c-note{width:13%;} col.c-act{width:8%;}
+  col.c-cat{width:7%;}  col.c-store{width:9%;}  col.c-stock{width:11%;}
+  col.c-vehicle{width:9%;} col.c-hot{width:6%;}  col.c-rep{width:8%;}
+  col.c-cust{width:27%;} col.c-note{width:15%;} col.c-act{width:8%;}
 
-  .dl-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:15px;}
+  .dl-item{display:flex;justify-content:space-between;align-items:center;gap:8px;row-gap:4px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:15px;}
+  .dl-item > span{min-width:0;}
   .dl-item:last-child{border-bottom:none;}
   .dl-item .dv{font-family:var(--mono);color:var(--red);font-size:14px;white-space:nowrap;}
 
@@ -198,9 +207,10 @@
   .empty{color:var(--ink-dim);font-size:15px;padding:20px 0;text-align:center;}
   .footnote{color:var(--ink-dim);font-size:13px;margin-top:24px;text-align:center;}
 
-  .small-list-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:15px;align-items:center;}
+  .small-list-item{display:flex;justify-content:space-between;gap:8px;row-gap:4px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:15px;align-items:center;}
+  .small-list-item > span{min-width:0;}
   .small-list-item:last-child{border-bottom:none;}
-  .week-tag{font-family:var(--mono);font-size:13px;color:var(--navy);background:var(--navy-soft);padding:2px 9px;border-radius:10px;}
+  .week-tag{font-family:var(--mono);font-size:13px;color:var(--navy);background:var(--navy-soft);padding:2px 9px;border-radius:10px;white-space:nowrap;vertical-align:middle;}
   .link-del{background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:13px;text-decoration:underline;font-family:var(--sans);}
   .link-del:hover{color:var(--red);}
 
@@ -224,7 +234,7 @@
     box-shadow:0 1px 2px rgba(30,58,95,.05);
   }
   .deal-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
-  .deal-card-title{font-family:var(--mono);color:var(--navy);font-size:20px;}
+  .deal-card-title{font-family:var(--mono);color:var(--orange);font-size:20px;white-space:nowrap;}
   .deal-card-sub{color:var(--ink-dim);font-size:14px;margin-bottom:6px;}
   .deal-card-row{font-size:14px;color:var(--ink-dim);margin-bottom:3px;}
   .deal-card-row b{color:var(--ink);}
