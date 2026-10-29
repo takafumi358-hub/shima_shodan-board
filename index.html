@@ -103,6 +103,32 @@
   .form-actions{display:flex;gap:10px;margin-top:16px;align-items:center;}
   .form-msg{font-size:14px;color:var(--green);margin-left:auto;}
 
+  /* 自動同期の表示 */
+  .sync-info{
+    font-size:12px;color:var(--ink-dim);font-weight:400 !important;
+    margin-left:10px;white-space:nowrap;
+  }
+  .sync-info .dot{
+    display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--green);margin-right:5px;vertical-align:middle;
+  }
+  .sync-info.stale .dot{background:var(--red);}
+  .sync-info button{
+    background:none;border:none;color:var(--navy);cursor:pointer;
+    font-size:12px;text-decoration:underline;font-family:var(--sans);padding:0;margin-left:8px;
+  }
+  .sync-toast{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:200;
+    background:var(--navy);color:#fff;padding:10px 18px;border-radius:20px;
+    font-size:14px;box-shadow:0 4px 14px rgba(30,58,95,.3);
+    opacity:0;transition:opacity .25s;pointer-events:none;
+  }
+  .sync-toast.show{opacity:1;}
+  @media (max-width:640px){
+    .sync-toast{bottom:92px;}
+    .sync-info{display:block;margin:6px 0 0;white-space:normal;}
+  }
+
   /* HOT badges */
   .hot{
     font-family:var(--mono);font-size:14px;padding:2px 9px;border-radius:20px;
@@ -343,6 +369,8 @@
   <button class="tab-btn bn-btn" data-tab="form"><span class="bn-icon">＋</span><span>入力</span></button>
 </nav>
 
+<div class="sync-toast" id="syncToast"></div>
+
 <div class="wrap">
 
   <!-- FORM PANEL -->
@@ -420,7 +448,7 @@
             <div class="customer-block">
               <div class="field">
                 <label>お客様名</label>
-                <input type="text" id="f_c1" placeholder="例）8/3 若杉自動車 高橋様">
+                <input type="text" id="f_c1" placeholder="例）若杉自動車 高橋様">
               </div>
             </div>
 
@@ -538,6 +566,7 @@
       <div>
         <div class="card">
           <h2>商談一覧 <span id="tableCount"></span>
+            <span class="sync-info" id="syncInfo"><span class="dot"></span>読み込み中…<button type="button" id="refreshBtn">今すぐ更新</button></span>
             <button id="exportBtn" class="btn btn-ghost" style="float:right;padding:6px 12px;font-size:13px;">⬇ 全データをバックアップ（JSON）</button>
           </h2>
           <div class="cat-tabs" id="categoryTabs"></div>
@@ -625,6 +654,7 @@
   let contracted = [];
   let auctions = [];
   let editingId = null;
+  let editingBase = null;   // 編集を開いた時点の updated_at（競合判定の基準）
   let apiReady = GAS_API_URL && GAS_API_URL.indexOf('https://') === 0;
 
   const CATS = ['平ボディ','クレーン','ダンプ','セルフ','バン','ウイング','冷蔵冷凍','トラクタ','新車','その他'];
@@ -652,14 +682,19 @@
     if(!json.ok) throw new Error(json.error || 'API error');
     return json.data || [];
   }
-  async function apiUpsert(type, record){
+  async function apiUpsert(type, record, baseUpdatedAt){
     const res = await fetch(GAS_API_URL, {
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({type, action:'upsert', record})
+      body: JSON.stringify({type, action:'upsert', record, baseUpdatedAt})
     });
     const json = await res.json();
-    if(!json.ok) throw new Error(json.error || 'API error');
+    if(!json.ok){
+      const err = new Error(json.message || json.error || 'API error');
+      err.code = json.error;          // 'conflict' / 'busy' など
+      err.current = json.current;     // 競合時のサーバー側の最新内容
+      throw err;
+    }
     return json.result;
   }
   async function apiDelete(type, id){
@@ -681,10 +716,105 @@
       ]);
       deals.forEach(d=>{ d.store = normStore(d.store); d.rep = normRep(d.rep); });
       sortDeals();
+      lastSignature = dataSignature();
+      lastSyncedAt = new Date();
     }catch(e){
       console.error(e);
       showApiWarning('データの取得に失敗しました: ' + e.message);
     }
+  }
+
+  // ---------- 自動同期（複数人での同時利用） ----------
+  const SYNC_INTERVAL_MS = 30000;   // 30秒ごとに差分を確認する
+  let lastSignature = '';
+  let lastSyncedAt = null;
+  let syncing = false;
+  let saving = false;               // 保存中は同期を止めて取り違えを防ぐ
+
+  /** 中身が変わったかどうかを判定するための簡易シグネチャ */
+  function dataSignature(){
+    const d = deals.map(x=>[x.id,x.updated_at,x.stock_no,x.hot,x.store,x.rep,
+                            x.deal_date,x.deadline_note,x.customer1,x.customer2,x.customer3].join('|')).join('/');
+    const c = contracted.map(x=>[x.id,x.week,x.stock_no,x.note].join('|')).join('/');
+    const a = auctions.map(x=>[x.id,x.store,x.venue,x.stock_nos,x.note].join('|')).join('/');
+    return d + '#' + c + '#' + a;
+  }
+
+  function showSyncToast(text){
+    const el = document.getElementById('syncToast');
+    el.textContent = text;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(()=>el.classList.remove('show'), 2600);
+  }
+
+  function renderSyncInfo(isError){
+    const el = document.getElementById('syncInfo');
+    if(!el) return;
+    let label;
+    if(isError){
+      label = '更新に失敗しました';
+    }else if(lastSyncedAt){
+      const hh = String(lastSyncedAt.getHours()).padStart(2,'0');
+      const mm = String(lastSyncedAt.getMinutes()).padStart(2,'0');
+      const ss = String(lastSyncedAt.getSeconds()).padStart(2,'0');
+      label = '最終同期 ' + hh + ':' + mm + ':' + ss;
+    }else{
+      label = '読み込み中…';
+    }
+    el.classList.toggle('stale', !!isError);
+    el.innerHTML = '<span class="dot"></span>' + label
+      + '<button type="button" id="refreshBtn">今すぐ更新</button>';
+    el.querySelector('#refreshBtn').addEventListener('click', ()=> syncNow(true));
+  }
+
+  /**
+   * サーバーの最新内容を取り込む。
+   * 中身が変わっていなければ再描画しない（スクロール位置や操作中の入力を乱さないため）。
+   */
+  async function syncNow(manual){
+    if(!apiReady || syncing || saving) return;
+    syncing = true;
+    try{
+      const [d, c, a] = await Promise.all([
+        apiGet('deals'), apiGet('contracted'), apiGet('auctions')
+      ]);
+      d.forEach(x=>{ x.store = normStore(x.store); x.rep = normRep(x.rep); });
+      const before = deals.length;
+      deals = d; contracted = c; auctions = a;
+      sortDeals();
+      lastSyncedAt = new Date();
+
+      const sig = dataSignature();
+      if(sig !== lastSignature){
+        lastSignature = sig;
+        const sc = document.querySelector('#panel-dash .table-scroll');
+        const top = sc ? sc.scrollTop : 0;
+        renderAll();
+        const sc2 = document.querySelector('#panel-dash .table-scroll');
+        if(sc2) sc2.scrollTop = top;
+        const diff = deals.length - before;
+        showSyncToast(diff > 0 ? ('他の端末で ' + diff + ' 件追加されました')
+                     : (diff < 0 ? ('他の端末で ' + Math.abs(diff) + ' 件削除されました')
+                                 : '他の端末の変更を反映しました'));
+      }else if(manual){
+        showSyncToast('最新の状態です');
+      }
+      renderSyncInfo(false);
+    }catch(e){
+      console.error(e);
+      renderSyncInfo(true);
+      if(manual) showSyncToast('更新に失敗しました');
+    }finally{
+      syncing = false;
+    }
+  }
+
+  function startAutoSync(){
+    setInterval(syncNow, SYNC_INTERVAL_MS);
+    // タブに戻ってきたとき・ウィンドウにフォーカスが戻ったときは即座に確認する
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) syncNow(); });
+    window.addEventListener('focus', ()=> syncNow());
   }
 
   function showApiWarning(msg){
@@ -806,6 +936,7 @@
   // ---------- deal form ----------
   function resetForm(){
     editingId = null;
+    editingBase = null;
     document.getElementById('f_id').value='';
     document.getElementById('f_category').value='平ボディ';
     document.getElementById('f_store').value='';
@@ -824,6 +955,7 @@
 
   function fillForm(deal){
     editingId = deal.id;
+    editingBase = deal.updated_at || '';
     document.getElementById('f_id').value = deal.id;
     document.getElementById('f_category').value = deal.category || '平ボディ';
     document.getElementById('f_store').value = normStore(deal.store);
@@ -852,6 +984,21 @@
     // 商談日は手入力。未入力のまま登録された場合だけ当日を補う
     const deal_date = document.getElementById('f_deal_date').value || todayStr();
 
+    const customer1 = document.getElementById('f_c1').value.trim();
+
+    // 新規登録時の取り違え防止：同じ在庫番号・同じお客様の商談が既にあれば確認する
+    if(!editingId){
+      const dup = deals.find(d =>
+        stockKey(d.stock_no) === stockKey(stock_no) &&
+        String(d.customer1||'').trim() === customer1 && customer1 !== ''
+      );
+      if(dup){
+        const who = normRep(dup.rep) ? '（担当：' + normRep(dup.rep) + '）' : '';
+        if(!confirm('同じ在庫番号・同じお客様の商談が既に登録されています' + who + '。\n'
+                  + 'それでも新しく登録しますか？')) return;
+      }
+    }
+
     const record = {
       id: editingId || '',
       category: document.getElementById('f_category').value,
@@ -862,13 +1009,14 @@
       hot: document.getElementById('f_hot').value,
       deal_date: deal_date,
       deadline_note: document.getElementById('f_deadline_note').value.trim(),
-      customer1: document.getElementById('f_c1').value.trim(),
+      customer1: customer1,
       customer2: document.getElementById('f_c2').value.trim(),
       customer3: document.getElementById('f_c3').value.trim(),
       updated_at: new Date().toISOString()
     };
+    saving = true;
     try{
-      const saved = await apiUpsert('deals', record);
+      const saved = await apiUpsert('deals', record, editingId ? editingBase : null);
       saved.store = normStore(saved.store);
       saved.rep = normRep(saved.rep);
       if(editingId){
@@ -881,9 +1029,51 @@
       setMsg('formMsg', editingId ? '更新しました' : '登録しました', false);
       resetForm();
       renderAll();
+      lastSignature = dataSignature();
     }catch(err){
       console.error(err);
-      setMsg('formMsg', '保存に失敗しました: ' + err.message, true);
+      if(err.code === 'conflict'){
+        handleConflict_(err.current, record);
+      }else if(err.code === 'busy'){
+        setMsg('formMsg', '他の人が保存中です。数秒後にもう一度押してください', true);
+      }else{
+        setMsg('formMsg', '保存に失敗しました: ' + err.message, true);
+      }
+    }finally{
+      saving = false;
+    }
+  }
+
+  /**
+   * 別の人が先に同じ商談を更新していた場合の案内。
+   * 相手の内容を消さないよう、読み込み直すか上書きするかを選んでもらう。
+   */
+  function handleConflict_(current, mine){
+    const c = current || {};
+    const lines = [
+      'この商談は別の人が先に更新しています。',
+      '',
+      '【現在サーバーに保存されている内容】',
+      '　HOT度：' + (c.hot || '-') + '　商談日：' + (c.deal_date || '-'),
+      '　営業：' + (c.rep || '未設定') + '　店舗：' + (c.store || '未設定'),
+      '　お客様：' + (c.customer1 || '-'),
+      '　期限：' + (c.deadline_note || '-'),
+      '',
+      'OK  … 最新の内容を読み込み直します（入力内容は破棄されます）',
+      'キャンセル … 入力内容でそのまま上書きします'
+    ].join('\n');
+
+    if(confirm(lines)){
+      // 最新を取り込んでフォームに読み直す
+      syncNow(true).then(()=>{
+        const latest = deals.find(d=>String(d.id)===String(mine.id));
+        if(latest) fillForm(latest);
+        setMsg('formMsg', '最新の内容を読み込みました', true);
+      });
+    }else{
+      // 利用者の明示的な指示として、基準を更新して再保存する
+      editingBase = c.updated_at || '';
+      setMsg('formMsg', 'もう一度「変更を保存する」を押すと上書きされます', true);
     }
   }
 
@@ -893,6 +1083,7 @@
       await apiDelete('deals', id);
       deals = deals.filter(d=>String(d.id)!==String(id));
       renderAll();
+      lastSignature = dataSignature();
     }catch(err){ console.error(err); alert('削除に失敗しました: ' + err.message); }
   }
 
@@ -1399,6 +1590,8 @@
 
     await loadAll();
     renderAll();
+    renderSyncInfo(false);
+    startAutoSync();
   }
 
   init();
