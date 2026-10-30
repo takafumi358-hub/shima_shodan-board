@@ -91,6 +91,9 @@
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   textarea{resize:vertical;min-height:44px;}
   .customer-block{border-left:3px solid var(--navy-soft);padding-left:12px;margin-top:10px;}
+  .bulk-opt{background:var(--panel-alt);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .bulk-hint{font-size:13px;color:var(--ink-dim);font-weight:400 !important;margin:8px 0 0;line-height:1.6;}
+  .bulk-hint b{color:var(--navy);}
 
   .btn{
     font-family:var(--sans);font-size:16px;border:none;border-radius:8px;
@@ -497,21 +500,38 @@
             <input type="hidden" id="au_id">
             <div class="row2">
               <div class="field">
+                <label>入札会場・区分</label>
+                <select id="au_venue"></select>
+              </div>
+              <div class="field">
                 <label>店舗</label>
                 <select id="au_store"></select>
               </div>
+            </div>
+            <div class="row2">
               <div class="field">
-                <label>入札会場</label>
-                <input type="text" id="au_venue" placeholder="例）サミット / イースト / オールジャパン">
+                <label>営業担当</label>
+                <input type="text" id="au_rep" placeholder="任意（自由入力）">
+              </div>
+              <div class="field">
+                <label>商談日</label>
+                <input type="date" id="au_deal_date">
               </div>
             </div>
             <div class="field">
-              <label>出品予定車輌（在庫番号、カンマ区切り）</label>
-              <input type="text" id="au_stocks" placeholder="例）1228, 1193, 1226">
+              <label>出品予定車輌（在庫番号をカンマ区切り）</label>
+              <textarea id="au_stocks" placeholder="例）1228, 1193, 1226, E672" style="min-height:70px;"></textarea>
             </div>
             <div class="field">
-              <label>備考</label>
-              <input type="text" id="au_note" placeholder="任意">
+              <label>備考（開催日・取消期限など）</label>
+              <input type="text" id="au_note" placeholder="例）開催日11/10　取り消し期限11/6迄">
+            </div>
+            <div class="field bulk-opt">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="au_bulk" checked style="width:auto;">
+                商談一覧にも一括登録する
+              </label>
+              <p class="bulk-hint" id="auPreview">在庫番号を入力すると、登録される商談の内容がここに表示されます</p>
             </div>
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">入札会エントリーを登録する</button>
@@ -675,6 +695,20 @@
 
   const UNSET = '__none__';
 
+  // 入札会場・区分。Code.gs の VENUES と必ず一致させること
+  const VENUES = ['サミット','イースト','オールジャパン','北関','常務',
+                  'ビックスター','その他入札会','その他展示会'];
+
+  // 在庫番号の頭文字からカテゴリを自動判定する
+  const STOCK_PREFIX_CATEGORY = {
+    '1':'平ボディ', '2':'クレーン', '3':'ダンプ', '5':'セルフ', '6':'バン',
+    '7':'ウイング', '8':'冷蔵冷凍', '9':'トラクタ', 'E':'その他'
+  };
+  function categoryFromStock(stockNo){
+    const head = stockKey(stockNo).charAt(0);
+    return STOCK_PREFIX_CATEGORY[head] || 'その他';
+  }
+
   // ---------- API ----------
   async function apiGet(type){
     const res = await fetch(GAS_API_URL + '?type=' + encodeURIComponent(type));
@@ -697,6 +731,27 @@
     }
     return json.result;
   }
+  async function apiBulkUpsert(type, records){
+    const res = await fetch(GAS_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({type, action:'bulkUpsert', records})
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.message || json.error || 'API error');
+    return json.result;
+  }
+  async function apiBulkDelete(type, ids){
+    const res = await fetch(GAS_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({type, action:'bulkDelete', ids})
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.message || json.error || 'API error');
+    return json.result;
+  }
+
   async function apiDelete(type, id){
     const res = await fetch(GAS_API_URL, {
       method:'POST',
@@ -922,7 +977,10 @@
     document.getElementById('f_store').innerHTML =
       '<option value="">（未設定）</option>' + STORES.map(s=>`<option value="${s}">${s}</option>`).join('');
     document.getElementById('au_store').innerHTML =
-      STORES.map(s=>`<option value="${s}">${s}</option>`).join('');
+      '<option value="">（未設定）</option>' + STORES.map(s=>`<option value="${s}">${s}</option>`).join('');
+    document.getElementById('au_venue').innerHTML =
+      VENUES.map(v=>`<option value="${v}">${v}</option>`).join('');
+    document.getElementById('au_deal_date').value = todayStr();
     document.getElementById('f_rep').innerHTML =
       '<option value="">（未設定）</option>' + SALES_REPS.map(s=>`<option value="${s}">${s}</option>`).join('');
     document.getElementById('filterRep').innerHTML =
@@ -1093,21 +1151,48 @@
     if(!apiReady){ showApiWarning(); return; }
     const stock_no = document.getElementById('ct_stock_no').value.trim();
     if(!stock_no){ setMsg('ctMsg', '在庫番号を入力してください', true); return; }
+
+    // 成約した車両の商談は不要になるので、同じ在庫番号の商談をまとめて削除する
+    const related = deals.filter(d => stockKey(d.stock_no) === stockKey(stock_no));
+    if(related.length){
+      const names = related.slice(0,5)
+        .map(d => '・' + (d.customer1 || '（お客様名なし）') + (normRep(d.rep) ? '（'+normRep(d.rep)+'）' : ''))
+        .join('\n');
+      const more = related.length > 5 ? '\n　ほか ' + (related.length-5) + ' 件' : '';
+      if(!confirm('在庫番号 ' + stock_no + ' の商談 ' + related.length + ' 件を削除します。\n\n'
+                + names + more + '\n\nよろしいですか？')) return;
+    }
+
     const record = {
       id: '',
       week: document.getElementById('ct_week').value,
       stock_no: stock_no,
       note: document.getElementById('ct_note').value.trim()
     };
+
+    saving = true;
     try{
       const saved = await apiUpsert('contracted', record);
       contracted.unshift(saved);
-      setMsg('ctMsg', '登録しました', false);
+
+      let removed = 0;
+      if(related.length){
+        const res = await apiBulkDelete('deals', related.map(d=>d.id));
+        removed = res.deleted || 0;
+        const gone = {};
+        related.forEach(d=>{ gone[String(d.id)] = true; });
+        deals = deals.filter(d => !gone[String(d.id)]);
+      }
+
+      setMsg('ctMsg', removed ? ('登録しました（商談 ' + removed + ' 件を削除）') : '登録しました', false);
       document.getElementById('contractForm').reset();
       renderAll();
+      lastSignature = dataSignature();
     }catch(err){
       console.error(err);
       setMsg('ctMsg', '保存に失敗しました: ' + err.message, true);
+    }finally{
+      saving = false;
     }
   }
 
@@ -1121,27 +1206,119 @@
   }
 
   // ---------- auctions ----------
+  /** カンマ・読点・空白・改行で区切られた在庫番号を配列にする */
+  function parseStockList(text){
+    return String(text||'').split(/[,、，\s\u3000\n\r]+/)
+      .map(v=>v.trim()).filter(v=>v!=='');
+  }
+
+  /** 入札会エントリーから作る商談レコードを組み立てる */
+  function buildAuctionDeals(){
+    const venue = document.getElementById('au_venue').value;
+    const store = document.getElementById('au_store').value;
+    const rep   = document.getElementById('au_rep').value.trim();
+    const note  = document.getElementById('au_note').value.trim();
+    const date  = document.getElementById('au_deal_date').value || todayStr();
+    const stocks = parseStockList(document.getElementById('au_stocks').value);
+
+    // 会場名＋備考をお客様名として使う（例：イースト　開催日11/10　取り消し期限11/6迄）
+    const customer1 = note ? (venue + '　' + note) : venue;
+    // 常務の販売は入札会ではないのでHOT度は未設定にする
+    const hot = (venue === '常務') ? '' : 'AA';
+
+    return stocks.map(stock_no => ({
+      id: '',
+      category: categoryFromStock(stock_no),
+      store: store,
+      rep: rep,
+      stock_no: stock_no,
+      vehicle: '',
+      hot: hot,
+      deal_date: date,
+      deadline_note: '',
+      customer1: customer1,
+      customer2: '',
+      customer3: ''
+    }));
+  }
+
+  /** 入力内容から、登録される商談の内容を事前に見せる */
+  function renderAuctionPreview(){
+    const el = document.getElementById('auPreview');
+    if(!el) return;
+    const on = document.getElementById('au_bulk').checked;
+    const list = buildAuctionDeals();
+    if(!on){
+      el.innerHTML = '商談一覧への登録は行いません（入札会エントリーのみ登録されます）';
+      return;
+    }
+    if(!list.length){
+      el.innerHTML = '在庫番号を入力すると、登録される商談の内容がここに表示されます';
+      return;
+    }
+    const byCat = {};
+    list.forEach(d=>{ byCat[d.category] = (byCat[d.category]||0)+1; });
+    const cats = Object.keys(byCat).map(c=>c+' '+byCat[c]+'台').join('　');
+    const sample = list.slice(0,3).map(d=>d.stock_no+'（'+d.category+'）').join('、');
+    el.innerHTML = '<b>' + list.length + ' 台</b>を商談一覧に登録します　'
+      + (list[0].hot ? 'HOT度：AA' : 'HOT度：未設定')
+      + '<br>' + escapeHtml(cats)
+      + '<br>お客様名：<b>' + escapeHtml(list[0].customer1) + '</b>'
+      + '<br>例：' + escapeHtml(sample) + (list.length>3 ? ' ほか' : '');
+  }
+
   async function handleAuctionSubmit(e){
     e.preventDefault();
     if(!apiReady){ showApiWarning(); return; }
-    const venue = document.getElementById('au_venue').value.trim();
-    if(!venue){ setMsg('auMsg', '入札会場を入力してください', true); return; }
+    const venue = document.getElementById('au_venue').value;
+    if(!venue){ setMsg('auMsg', '入札会場を選択してください', true); return; }
+
+    const stocks = parseStockList(document.getElementById('au_stocks').value);
+    const bulk = document.getElementById('au_bulk').checked;
+    const dealRecords = bulk ? buildAuctionDeals() : [];
+
+    if(bulk && dealRecords.length){
+      if(!confirm(dealRecords.length + ' 台を商談一覧に登録します。よろしいですか？')) return;
+    }
+
     const record = {
       id: '',
       store: document.getElementById('au_store').value,
       venue: venue,
-      stock_nos: document.getElementById('au_stocks').value.trim(),
+      rep: document.getElementById('au_rep').value.trim(),
+      stock_nos: stocks.join(', '),
       note: document.getElementById('au_note').value.trim()
     };
+
+    saving = true;
     try{
       const saved = await apiUpsert('auctions', record);
       auctions.unshift(saved);
-      setMsg('auMsg', '登録しました', false);
+
+      let added = 0;
+      if(dealRecords.length){
+        const res = await apiBulkUpsert('deals', dealRecords);
+        (res.items || []).forEach(d=>{
+          d.store = normStore(d.store);
+          d.rep = normRep(d.rep);
+          deals.push(d);
+        });
+        added = res.added || 0;
+        sortDeals();
+      }
+
+      setMsg('auMsg', added ? ('登録しました（商談 ' + added + ' 件を追加）') : '登録しました', false);
       document.getElementById('auctionForm').reset();
+      document.getElementById('au_deal_date').value = todayStr();
+      document.getElementById('au_bulk').checked = true;
       renderAll();
+      renderAuctionPreview();
+      lastSignature = dataSignature();
     }catch(err){
       console.error(err);
       setMsg('auMsg', '保存に失敗しました: ' + err.message, true);
+    }finally{
+      saving = false;
     }
   }
 
@@ -1202,8 +1379,8 @@
       : auctions.map(a=>`
         <div class="small-list-item" style="align-items:flex-start;">
           <span>
-            ${storeBadge(a.store)}
-            <b>${escapeHtml(a.venue)}</b><br>
+            <b>${escapeHtml(a.venue)}</b> ${storeBadge(a.store)} ${a.rep? '<span class="rep-tag">'+escapeHtml(a.rep)+'</span>' : ''}
+            <span class="cust">（${parseStockList(a.stock_nos).length}台）</span><br>
             <span class="cust">${escapeHtml(a.stock_nos)}</span>
             ${a.note? '<br><span class="cust">'+escapeHtml(a.note)+'</span>' : ''}
           </span>
@@ -1260,22 +1437,29 @@
   }
 
   // ---------- 入札会（店舗タブ） ----------
-  let activeStore = '';
+  let activeVenue = '';   // 入札会場での絞り込み
+
+  function normVenue(v){
+    const s = String(v===undefined||v===null ? '' : v).trim();
+    return VENUES.indexOf(s) >= 0 ? s : '';
+  }
 
   function renderAuctionTabs(){
     const el = document.getElementById('auctionTabs');
     const counts = {};
-    STORES.forEach(s=>counts[s]=0);
-    auctions.forEach(a=>{ const s=normStore(a.store); if(counts[s]!==undefined) counts[s]++; });
+    VENUES.forEach(v=>counts[v]=0);
+    let other = 0;
+    auctions.forEach(a=>{ const v=normVenue(a.venue); if(v) counts[v]++; else other++; });
     const tabs = [{label:'すべて', value:'', count: auctions.length}]
-      .concat(STORES.map(s=>({label:s, value:s, count:counts[s]})));
+      .concat(VENUES.map(v=>({label:v, value:v, count:counts[v]})))
+      .concat(other ? [{label:'その他', value:UNSET, count:other}] : []);
     el.innerHTML = tabs.map(t => `
-      <button class="cat-tab-btn ${t.value===activeStore?'active':''}" data-store="${escapeHtml(t.value)}">
+      <button class="cat-tab-btn ${t.value===activeVenue?'active':''}" data-venue="${escapeHtml(t.value)}">
         ${escapeHtml(t.label)}<span class="cnt">${t.count}</span>
       </button>`).join('');
-    el.querySelectorAll('[data-store]').forEach(btn=>{
+    el.querySelectorAll('[data-venue]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        activeStore = btn.getAttribute('data-store');
+        activeVenue = btn.getAttribute('data-venue');
         renderAuctionTabs(); renderAuctionDashList();
       });
     });
@@ -1283,15 +1467,16 @@
 
   function renderAuctionDashList(){
     let list = auctions.slice();
-    if(activeStore) list = list.filter(a=>normStore(a.store)===activeStore);
+    if(activeVenue === UNSET) list = list.filter(a=>!normVenue(a.venue));
+    else if(activeVenue) list = list.filter(a=>normVenue(a.venue)===activeVenue);
     const el = document.getElementById('dashAuctionList');
     el.innerHTML = (list.length===0)
       ? '<div class="empty">登録された入札会エントリーがありません</div>'
       : list.map(a=>`
         <div class="small-list-item" style="align-items:flex-start;">
           <span>
-            ${storeBadge(a.store)}
-            <b>${escapeHtml(a.venue)}</b><br>
+            <b>${escapeHtml(a.venue)}</b> ${storeBadge(a.store)} ${a.rep? '<span class="rep-tag">'+escapeHtml(a.rep)+'</span>' : ''}
+            <span class="cust">（${parseStockList(a.stock_nos).length}台）</span><br>
             <span class="cust">${escapeHtml(a.stock_nos)}</span>
             ${a.note? '<br><span class="cust">'+escapeHtml(a.note)+'</span>' : ''}
           </span>
@@ -1586,6 +1771,12 @@
     document.getElementById('filterRep').addEventListener('change', renderTable);
     document.getElementById('contractForm').addEventListener('submit', handleContractSubmit);
     document.getElementById('auctionForm').addEventListener('submit', handleAuctionSubmit);
+    ['au_venue','au_store','au_rep','au_note','au_stocks','au_bulk','au_deal_date'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.addEventListener('input', renderAuctionPreview);
+      if(el) el.addEventListener('change', renderAuctionPreview);
+    });
+    renderAuctionPreview();
     document.getElementById('exportBtn').addEventListener('click', handleExport);
 
     await loadAll();
