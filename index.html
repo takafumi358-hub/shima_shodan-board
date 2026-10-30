@@ -128,7 +128,7 @@
   }
   .sync-toast.show{opacity:1;}
   @media (max-width:640px){
-    .sync-toast{bottom:150px;}
+    .sync-toast{bottom:130px;}
     .sync-info{display:block;margin:6px 0 0;white-space:normal;font-size:12px;}
     .card h2{display:block;}
   }
@@ -308,8 +308,50 @@
   }
   .to-top.show{opacity:1;pointer-events:auto;}
 
+  .mobile-only-sel{display:none;}
+
   @media (max-width: 640px){
-    body{padding-bottom:88px;}
+    body{padding-bottom:74px;}
+
+    /* --- ヘッダーを薄く --- */
+    .rail-inner{padding:9px 12px 8px;}
+    .brand-title{font-size:18px;gap:7px;}
+    .brand-title .ver{font-size:10px;padding:1px 6px;}
+    .clock b{font-size:14px;}
+    .clock span{display:none;}
+
+    /* --- 下部ナビを低く --- */
+    .bottom-nav{padding:3px 6px calc(3px + env(safe-area-inset-bottom));}
+    .bn-btn{padding:5px 4px;font-size:10px;gap:1px;}
+    .bn-icon{font-size:16px;}
+
+    /* --- 統計カードを1行表示に --- */
+    .stat-card{padding:7px 10px;}
+    .stat-card .n{font-size:19px;}
+    .stat-card .l{font-size:11px;}
+
+    /* --- カードの余白を詰める --- */
+    .panel{padding:10px 0 0;}
+    .card{padding:11px 11px;margin-bottom:10px;border-radius:10px;}
+    .card h2{font-size:15px;margin-bottom:9px;}
+
+    /* --- 店舗はタブではなくセレクトにして1行分節約 --- */
+    #dealStoreTabs{display:none;}
+    .mobile-only-sel{display:block;}
+
+    /* --- タブを低く --- */
+    .cat-tabs{margin-bottom:9px;padding-bottom:4px;}
+    .cat-tab-btn{padding:6px 12px;font-size:14px;}
+
+    /* --- 商談カードを圧縮 --- */
+    .deal-card{padding:10px 12px;margin-bottom:8px;}
+    .deal-card-top{margin-bottom:4px;}
+    .deal-card-title{font-size:19px;}
+    .deal-card-sub{font-size:13px;margin-bottom:4px;gap:5px;}
+    .deal-card-row{font-size:13px;margin-bottom:2px;line-height:1.4;}
+    .deal-card-cust{font-size:14px;line-height:1.4;margin:1px 0;}
+    .deal-card-actions{margin-top:8px;padding-top:8px;gap:8px;}
+    .deal-card-actions button{font-size:14px;padding:9px;}
 
     /* 折りたたみ：見出しをタップで開閉する */
     .card.mobile-collapse > h2{
@@ -324,7 +366,7 @@
     }
     .card.mobile-collapse.collapsed .collapse-mark{transform:rotate(-90deg);}
 
-    .to-top{display:block;}
+    .to-top{display:block;bottom:78px;right:12px;width:40px;height:40px;font-size:18px;}
 
     /* タブの横スクロールに端のぼかしを付けて、続きがあることを示す */
     .cat-tabs{
@@ -340,19 +382,10 @@
     /* 一括登録のプレビューを読みやすく */
     .bulk-hint{font-size:14px;}
     .wrap{padding:0 12px;}
-    .rail-inner{padding:14px 12px 10px;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;}
     .brand-eyebrow{display:none;}
-    .brand-title{font-size:20px;}
-    .brand-title .ver{font-size:11px;padding:2px 7px;}
     .brand-sub{display:none;}
-    .clock b{font-size:15px;}
-    .clock span{font-size:12px;}
     .tabs{display:none;}
     .bottom-nav{display:flex;}
-    .bn-btn{font-size:12px;}
-    .panel{padding:16px 0 0;}
-    .card{padding:14px 13px;margin-bottom:14px;}
-    .card h2{font-size:16px;line-height:1.4;}
     .card h2 span{font-size:13px;}
     .card h2 #exportBtn, .card h2 button{display:block !important;float:none !important;margin:10px 0 0;width:100%;font-size:15px;}
     /* 7枚あるので横スクロールだと見落とす。2列で全部見せる */
@@ -361,23 +394,17 @@
     .stat-card .n{font-size:22px;}
     .stat-card .l{font-size:12px;margin-top:0;}
     .cat-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:14px;}
-    .cat-tab-btn{flex-shrink:0;padding:8px 15px;font-size:15px;}
     .filters{
       flex-direction:column;gap:8px;
       position:sticky;top:0;z-index:5;
       background:var(--panel);padding:10px 0 8px;margin:0 0 10px;
       box-shadow:0 6px 8px -8px rgba(30,58,95,.35);
     }
-    .filters input[type=text],.filters select{width:100%;font-size:16px;padding:11px 12px;}
+    .filters{flex-direction:row;flex-wrap:wrap;gap:6px;padding:8px 0 6px;margin-bottom:8px;}
+    .filters input[type=text]{width:100%;flex:1 0 100%;font-size:16px;padding:9px 11px;}
+    .filters select{flex:1 1 0;min-width:0;font-size:13px;padding:8px 6px;}
     .table-scroll{display:none;}
     .mobile-cards{display:block;}
-    .deal-card{padding:14px 14px 12px;margin-bottom:12px;border-radius:14px;}
-    .deal-card-top{margin-bottom:8px;}
-    .deal-card-title{font-size:21px;}
-    .deal-card-sub{font-size:15px;}
-    .deal-card-row{font-size:16px;line-height:1.5;}
-    .deal-card-cust{font-size:16px;line-height:1.5;}
-    .deal-card-actions button{font-size:15px;padding:13px;border-radius:10px;}
     table{font-size:15px;}
     .field input,.field select,.field textarea{font-size:16px;padding:12px;}
     .form-actions{display:flex;flex-wrap:wrap;gap:8px;}
@@ -655,6 +682,7 @@
               <option value="ラジコン">ラジコン</option>
             </select>
             <select id="filterRep"></select>
+            <select id="filterStoreSel" class="mobile-only-sel"></select>
           </div>
           <div class="table-scroll">
           <table class="deal-table">
@@ -1038,6 +1066,10 @@
     document.getElementById('filterRep').innerHTML =
       '<option value="">営業：すべて</option><option value="'+UNSET+'">営業：未設定</option>'
       + SALES_REPS.map(s=>`<option value="${s}">営業：${s}</option>`).join('');
+    // スマホでは店舗タブの代わりにセレクトを使う（タブ1行分を節約するため）
+    document.getElementById('filterStoreSel').innerHTML =
+      '<option value="">店舗：すべて</option><option value="'+UNSET+'">店舗：未設定</option>'
+      + STORES.map(s=>`<option value="${s}">店舗：${s}</option>`).join('');
     document.getElementById('storeLegend').innerHTML =
       STORES.map(s=>`<div class="item"><span class="store-dot" style="background:${STORE_COLORS[s]}"></span>${s}</div>`).join('')
       + '<div class="item"><span class="store-dot none"></span>未設定</div>';
@@ -1584,9 +1616,17 @@
     el.querySelectorAll('[data-dealstore]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         activeDealStore = btn.getAttribute('data-dealstore');
+        syncStoreSelect();
         renderDealStoreTabs(); renderTable();
       });
     });
+    syncStoreSelect();
+  }
+
+  /** 店舗タブとセレクトの選択状態を合わせる */
+  function syncStoreSelect(){
+    const sel = document.getElementById('filterStoreSel');
+    if(sel && sel.value !== activeDealStore) sel.value = activeDealStore;
   }
 
   function renderStats(){
@@ -1860,6 +1900,11 @@
     document.getElementById('searchInput').addEventListener('input', renderTable);
     document.getElementById('filterHot').addEventListener('change', renderTable);
     document.getElementById('filterRep').addEventListener('change', renderTable);
+    document.getElementById('filterStoreSel').addEventListener('change', (e)=>{
+      activeDealStore = e.target.value;
+      renderDealStoreTabs();
+      renderTable();
+    });
     document.getElementById('contractForm').addEventListener('submit', handleContractSubmit);
     document.getElementById('auctionForm').addEventListener('submit', handleAuctionSubmit);
     ['au_venue','au_store','au_rep','au_note','au_stocks','au_bulk','au_deal_date'].forEach(id=>{
