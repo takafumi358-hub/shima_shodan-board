@@ -247,6 +247,15 @@
   .bar-fill{height:100%;background:linear-gradient(90deg,#4f7cb0,var(--navy));}
   .bar-count{width:26px;text-align:right;font-family:var(--mono);color:var(--ink-dim);}
 
+  /* もっと見る */
+  .more-wrap{text-align:center;margin-top:12px;}
+  .btn-more{
+    width:100%;background:var(--panel-alt);border:1px solid var(--line);
+    color:var(--navy);border-radius:10px;padding:12px;font-size:15px;
+    font-family:var(--sans);cursor:pointer;
+  }
+  .btn-more:hover{border-color:var(--navy);background:var(--navy-soft);}
+
   .empty{color:var(--ink-dim);font-size:15px;padding:20px 0;text-align:center;}
   .footnote{color:var(--ink-dim);font-size:13px;margin-top:24px;text-align:center;}
 
@@ -359,8 +368,9 @@
     /* 折りたたみ：見出しをタップで開閉する */
     .card.mobile-collapse > h2{
       cursor:pointer;margin-bottom:0;display:flex;align-items:center;
-      justify-content:space-between;gap:8px;padding:2px 0;
+      justify-content:space-between;gap:8px;padding:2px 0;flex-wrap:wrap;
     }
+    .card.mobile-collapse > h2 > span:not(.collapse-mark){flex:1 1 auto;min-width:0;}
     .card.mobile-collapse:not(.collapsed) > h2{margin-bottom:14px;}
     .card.mobile-collapse.collapsed > *:not(h2){display:none !important;}
     .collapse-mark{
@@ -665,7 +675,7 @@
 
     <div class="grid2">
       <div>
-        <div class="card">
+        <div class="card mobile-collapse" id="dealListCard">
           <h2>商談一覧 <span id="tableCount"></span>
             <span class="sync-info" id="syncInfo"><span class="dot"></span>読み込み中…<button type="button" id="refreshBtn">今すぐ更新</button></span>
             <button id="exportBtn" class="btn btn-ghost" style="float:right;padding:6px 12px;font-size:13px;">⬇ 全データをバックアップ（JSON）</button>
@@ -701,6 +711,9 @@
           </table>
           </div>
           <div class="mobile-cards" id="tableCardsMobile"></div>
+          <div class="more-wrap" id="moreWrap" style="display:none;">
+            <button type="button" class="btn-more" id="moreBtn"></button>
+          </div>
           <div class="empty" id="tableEmpty" style="display:none;">該当する商談がありません</div>
         </div>
 
@@ -1578,6 +1591,8 @@
   }
 
   // ---------- dashboard ----------
+  const PAGE_SIZE = 5;       // 初期表示の件数
+  let visibleCount = PAGE_SIZE;
   let activeCategory = '';
   let activeDealStore = '';
 
@@ -1594,6 +1609,7 @@
       </button>`).join('');
     el.querySelectorAll('[data-cat]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
+        visibleCount = PAGE_SIZE;
         activeCategory = btn.getAttribute('data-cat');
         syncCatSelect();
         renderCategoryTabs(); renderDealStoreTabs(); renderTable();
@@ -1629,6 +1645,7 @@
 
     el.querySelectorAll('[data-dealstore]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
+        visibleCount = PAGE_SIZE;
         activeDealStore = btn.getAttribute('data-dealstore');
         syncStoreSelect();
         renderDealStoreTabs(); renderTable();
@@ -1744,7 +1761,22 @@
     const body = document.getElementById('tableBody');
     document.getElementById('tableEmpty').style.display = list.length? 'none':'block';
 
-    body.innerHTML = list.map(d=>{
+    // 初期は5件だけ。残りは「もっと見る」で追加表示する
+    if(visibleCount > list.length) visibleCount = Math.max(PAGE_SIZE, list.length);
+    const shown = list.slice(0, visibleCount);
+    const rest = list.length - shown.length;
+
+    const moreWrap = document.getElementById('moreWrap');
+    const moreBtn = document.getElementById('moreBtn');
+    if(rest > 0){
+      moreWrap.style.display = 'block';
+      const next = Math.min(PAGE_SIZE, rest);
+      moreBtn.textContent = 'もっと見る（残り ' + rest + ' 件 / 次の ' + next + ' 件）';
+    }else{
+      moreWrap.style.display = 'none';
+    }
+
+    body.innerHTML = shown.map(d=>{
       const custs = [d.customer1,d.customer2,d.customer3].filter(Boolean).map(c=>`<div><b>・</b>${escapeHtml(c)}</div>`).join('') || '<span class="cust">-</span>';
       const n = daysUntil(d.deal_date);
       const soonCls = (n!==null && n<=3) ? 'deadline-soon' : '';
@@ -1784,7 +1816,7 @@
 
     // ---- mobile cards ----
     const cardsEl = document.getElementById('tableCardsMobile');
-    cardsEl.innerHTML = list.map(d=>{
+    cardsEl.innerHTML = shown.map(d=>{
       const custs = [d.customer1,d.customer2,d.customer3].filter(Boolean).map(c=>`<div class="deal-card-cust">・${escapeHtml(c)}</div>`).join('');
       const n = daysUntil(d.deal_date);
       const soonCls = (n!==null && n<=3) ? 'deadline-soon' : '';
@@ -1865,19 +1897,27 @@
       mark.className = 'collapse-mark';
       mark.textContent = '▼';
       h2.appendChild(mark);
-      h2.addEventListener('click', ()=>{
+      h2.addEventListener('click', (e)=>{
         if(!isMobile()) return;
+        // 見出し内のボタン（今すぐ更新・バックアップ）では開閉しない
+        if(e.target.closest('button')) return;
+        card.dataset.touched = '1';
         card.classList.toggle('collapsed');
       });
     });
     applyCollapseDefault();
   }
 
-  /** スマホでは最初たたんでおく。画面を広げたら全部開く */
+  /**
+   * スマホでは最初たたんでおく。ただし商談一覧だけは開いたままにする。
+   * 一度手で開閉したカードは、その状態を保つ。
+   */
   function applyCollapseDefault(){
     const mobile = isMobile();
     document.querySelectorAll('.card.mobile-collapse').forEach(card=>{
-      card.classList.toggle('collapsed', mobile);
+      if(card.dataset.touched === '1') return;          // 利用者が操作済みなら触らない
+      const keepOpen = (card.id === 'dealListCard');
+      card.classList.toggle('collapsed', mobile && !keepOpen);
     });
   }
 
@@ -1917,15 +1957,21 @@
     document.getElementById('dealForm').addEventListener('submit', handleSubmit);
     document.getElementById('clearBtn').addEventListener('click', resetForm);
     document.getElementById('quickSearch').addEventListener('input', renderQuickList);
-    document.getElementById('searchInput').addEventListener('input', renderTable);
-    document.getElementById('filterHot').addEventListener('change', renderTable);
-    document.getElementById('filterRep').addEventListener('change', renderTable);
+    document.getElementById('searchInput').addEventListener('input', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
+    document.getElementById('filterHot').addEventListener('change', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
+    document.getElementById('filterRep').addEventListener('change', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
+    document.getElementById('moreBtn').addEventListener('click', ()=>{
+      visibleCount += PAGE_SIZE;
+      renderTable();
+    });
     document.getElementById('filterStoreSel').addEventListener('change', (e)=>{
+      visibleCount = PAGE_SIZE;
       activeDealStore = e.target.value;
       renderDealStoreTabs();
       renderTable();
     });
     document.getElementById('filterCatSel').addEventListener('change', (e)=>{
+      visibleCount = PAGE_SIZE;
       activeCategory = e.target.value;
       renderCategoryTabs();
       renderDealStoreTabs();
