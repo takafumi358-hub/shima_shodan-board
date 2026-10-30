@@ -31,7 +31,8 @@
   }
   *{box-sizing:border-box;}
   *{font-weight:700 !important;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    overflow-x:hidden;max-width:100%;}
   body{padding:0 0 60px;}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
 
@@ -192,14 +193,14 @@
   .filters input[type=text]{flex:1;min-width:180px;}
 
   /* table */
-  .table-scroll{max-height:460px;overflow-y:auto;overflow-x:auto;border:1px solid var(--line);border-radius:8px;}
+  .table-scroll{max-height:460px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--line);border-radius:8px;}
   table{width:100%;border-collapse:collapse;font-size:15px;table-layout:fixed;}
   thead th{
     text-align:left;font-size:13px;letter-spacing:.03em;color:var(--ink-dim);
     border-bottom:1px solid var(--line);padding:9px 8px;white-space:nowrap;
     position:sticky;top:0;background:var(--panel-alt);z-index:1;
   }
-  tbody td{padding:10px 8px;border-bottom:1px solid var(--line-soft);vertical-align:middle;word-break:break-word;line-height:1.5;}
+  tbody td{padding:10px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top;word-break:break-word;line-height:1.5;}
   tbody td.cust{vertical-align:top;}
   tbody tr:hover{background:var(--panel-alt);}
   /* 在庫番号は基準サイズ・オレンジ */
@@ -227,13 +228,13 @@
   }
   .row-actions button:hover{color:var(--navy);}
 
-  /* 列幅：商談日を削除した分をお客様欄に加算 */
-  /* 画面が狭いときに列が潰れてタグが重なるのを防ぐ。
-     必要幅に足りない場合は .table-scroll が横スクロールする */
-  table.deal-table{min-width:1200px;}
-  col.c-cat{width:10%;} col.c-store{width:11%;} col.c-stock{width:8%;}
-  col.c-vehicle{width:8%;} col.c-hot{width:6%;} col.c-rep{width:7%;}
-  col.c-date{width:7%;} col.c-cust{width:22%;} col.c-note{width:13%;} col.c-act{width:8%;}
+  /* 横スクロールを出さないため、2段組みのセルで列数を減らしている */
+  table.deal-table{min-width:0;}
+  col.c-stock{width:15%;} col.c-cat{width:16%;} col.c-hot{width:8%;}
+  col.c-rep{width:14%;} col.c-cust{width:25%;} col.c-note{width:14%;} col.c-act{width:8%;}
+  .table-scroll{overflow-x:hidden;}
+  .cell-main{display:block;}
+  .cell-sub{display:block;font-size:13px;color:var(--ink-dim);margin-top:2px;word-break:break-word;}
 
   .dl-item{display:flex;justify-content:space-between;align-items:center;gap:8px;row-gap:4px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:15px;}
   .dl-item > span{min-width:0;}
@@ -340,8 +341,10 @@
     .mobile-only-sel{display:block;}
 
     /* --- タブを低く --- */
-    .cat-tabs{margin-bottom:9px;padding-bottom:4px;}
-    .cat-tab-btn{padding:6px 12px;font-size:14px;}
+    .cat-tabs{margin-bottom:9px;padding-bottom:0;flex-wrap:wrap;overflow-x:visible;gap:5px;}
+    .cat-tab-btn{padding:5px 11px;font-size:13px;}
+    /* カテゴリもセレクトに寄せて、タブの折り返しで高さを食わないようにする */
+    #categoryTabs{display:none;}
 
     /* --- 商談カードを圧縮 --- */
     .deal-card{padding:10px 12px;margin-bottom:8px;}
@@ -368,12 +371,7 @@
 
     .to-top{display:block;bottom:78px;right:12px;width:40px;height:40px;font-size:18px;}
 
-    /* タブの横スクロールに端のぼかしを付けて、続きがあることを示す */
-    .cat-tabs{
-      -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent 100%);
-      mask-image:linear-gradient(90deg,#000 88%,transparent 100%);
-      padding-right:18px;
-    }
+
 
     /* 商談カード：バッジ類を折り返す */
     .deal-card-sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
@@ -393,7 +391,8 @@
     .stat-card{padding:10px 12px;display:flex;align-items:baseline;gap:8px;}
     .stat-card .n{font-size:22px;}
     .stat-card .l{font-size:12px;margin-top:0;}
-    .cat-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:14px;}
+    /* 横スクロールは使わず折り返す */
+    .cat-tabs{flex-wrap:wrap;overflow-x:visible;gap:5px;}
     .filters{
       flex-direction:column;gap:8px;
       position:sticky;top:0;z-index:5;
@@ -403,8 +402,11 @@
     .filters{flex-direction:row;flex-wrap:wrap;gap:6px;padding:8px 0 6px;margin-bottom:8px;}
     .filters input[type=text]{width:100%;flex:1 0 100%;font-size:16px;padding:9px 11px;}
     .filters select{flex:1 1 0;min-width:0;font-size:13px;padding:8px 6px;}
-    .table-scroll{display:none;}
+    .deals-scroll{display:none;}
     .mobile-cards{display:block;}
+    /* 成約車両は表のまま見せる（横には広げない） */
+    .contract-scroll table{font-size:13px;}
+    .contract-scroll th,.contract-scroll td{padding:7px 5px;}
     table{font-size:15px;}
     .field input,.field select,.field textarea{font-size:16px;padding:12px;}
     .form-actions{display:flex;flex-wrap:wrap;gap:8px;}
@@ -683,16 +685,17 @@
             </select>
             <select id="filterRep"></select>
             <select id="filterStoreSel" class="mobile-only-sel"></select>
+            <select id="filterCatSel" class="mobile-only-sel"></select>
           </div>
-          <div class="table-scroll">
+          <div class="table-scroll deals-scroll">
           <table class="deal-table">
             <colgroup>
-              <col class="c-cat"><col class="c-store"><col class="c-stock"><col class="c-vehicle">
-              <col class="c-hot"><col class="c-rep"><col class="c-date"><col class="c-cust">
-              <col class="c-note"><col class="c-act">
+              <col class="c-stock"><col class="c-cat"><col class="c-hot">
+              <col class="c-rep"><col class="c-cust"><col class="c-note"><col class="c-act">
             </colgroup>
             <thead><tr>
-              <th>カテゴリ</th><th>店舗</th><th>在庫番号</th><th>車輌</th><th>HOT</th><th>営業</th><th>商談日</th><th>お客様</th><th>期限</th><th></th>
+              <th>在庫番号 / 車輌</th><th>カテゴリ / 店舗</th><th>HOT</th>
+              <th>営業 / 商談日</th><th>お客様</th><th>期限</th><th></th>
             </tr></thead>
             <tbody id="tableBody"></tbody>
           </table>
@@ -704,7 +707,7 @@
         <div class="card mobile-collapse">
           <h2>成約車両（週次）</h2>
           <div class="cat-tabs" id="contractTabs"></div>
-          <div class="table-scroll" style="max-height:340px;">
+          <div class="table-scroll contract-scroll" style="max-height:340px;">
             <table style="table-layout:auto;">
               <thead><tr><th>週</th><th>在庫番号</th><th>備考</th><th></th></tr></thead>
               <tbody id="dashContractBody"></tbody>
@@ -1070,6 +1073,9 @@
     document.getElementById('filterStoreSel').innerHTML =
       '<option value="">店舗：すべて</option><option value="'+UNSET+'">店舗：未設定</option>'
       + STORES.map(s=>`<option value="${s}">店舗：${s}</option>`).join('');
+    document.getElementById('filterCatSel').innerHTML =
+      '<option value="">分類：すべて</option>'
+      + CATS.map(c=>`<option value="${c}">分類：${c}</option>`).join('');
     document.getElementById('storeLegend').innerHTML =
       STORES.map(s=>`<div class="item"><span class="store-dot" style="background:${STORE_COLORS[s]}"></span>${s}</div>`).join('')
       + '<div class="item"><span class="store-dot none"></span>未設定</div>';
@@ -1589,9 +1595,17 @@
     el.querySelectorAll('[data-cat]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         activeCategory = btn.getAttribute('data-cat');
+        syncCatSelect();
         renderCategoryTabs(); renderDealStoreTabs(); renderTable();
       });
     });
+    syncCatSelect();
+  }
+
+  /** カテゴリタブとセレクトの選択状態を合わせる */
+  function syncCatSelect(){
+    const sel = document.getElementById('filterCatSel');
+    if(sel && sel.value !== activeCategory) sel.value = activeCategory;
   }
 
   function renderDealStoreTabs(){
@@ -1736,13 +1750,19 @@
       const soonCls = (n!==null && n<=3) ? 'deadline-soon' : '';
       return `
       <tr>
-        <td class="cat-cell" style="${storeBar(d.store)}"><span class="cat-tag">${escapeHtml(d.category)}</span></td>
-        <td>${storeBadge(d.store)}</td>
-        <td class="stockno">${escapeHtml(d.stock_no)}</td>
-        <td>${escapeHtml(d.vehicle)}</td>
+        <td style="${storeBar(d.store)}">
+          <span class="cell-main stockno">${escapeHtml(d.stock_no)}</span>
+          <span class="cell-sub">${escapeHtml(d.vehicle) || '-'}</span>
+        </td>
+        <td class="cat-cell">
+          <span class="cell-main"><span class="cat-tag">${escapeHtml(d.category)}</span></span>
+          <span class="cell-sub">${storeBadge(d.store)}</span>
+        </td>
         <td>${hotLabel(d.hot)}</td>
-        <td>${repTag(d.rep)}</td>
-        <td class="${soonCls}" style="white-space:nowrap;">${fmtDate(d.deal_date)}</td>
+        <td>
+          <span class="cell-main">${repTag(d.rep)}</span>
+          <span class="cell-sub ${soonCls}">${fmtDate(d.deal_date) || '-'}</span>
+        </td>
         <td class="cust">${custs}</td>
         <td class="cust">${escapeHtml(d.deadline_note)}</td>
         <td class="row-actions">
@@ -1902,6 +1922,12 @@
     document.getElementById('filterRep').addEventListener('change', renderTable);
     document.getElementById('filterStoreSel').addEventListener('change', (e)=>{
       activeDealStore = e.target.value;
+      renderDealStoreTabs();
+      renderTable();
+    });
+    document.getElementById('filterCatSel').addEventListener('change', (e)=>{
+      activeCategory = e.target.value;
+      renderCategoryTabs();
       renderDealStoreTabs();
       renderTable();
     });
