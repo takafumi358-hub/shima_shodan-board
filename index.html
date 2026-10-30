@@ -128,8 +128,9 @@
   }
   .sync-toast.show{opacity:1;}
   @media (max-width:640px){
-    .sync-toast{bottom:92px;}
-    .sync-info{display:block;margin:6px 0 0;white-space:normal;}
+    .sync-toast{bottom:150px;}
+    .sync-info{display:block;margin:6px 0 0;white-space:normal;font-size:12px;}
+    .card h2{display:block;}
   }
 
   /* HOT badges */
@@ -293,8 +294,51 @@
     .row2,.row3{grid-template-columns:1fr;}
   }
 
+  /* スマホ：カードの折りたたみ */
+  .card.mobile-collapse > h2{cursor:default;}
+  .collapse-mark{display:none;}
+
+  /* スマホ：先頭へ戻る */
+  .to-top{
+    display:none;position:fixed;right:14px;bottom:96px;z-index:120;
+    width:44px;height:44px;border-radius:50%;border:none;
+    background:var(--navy);color:#fff;font-size:20px;line-height:1;
+    box-shadow:0 3px 10px rgba(30,58,95,.35);cursor:pointer;
+    opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .to-top.show{opacity:1;pointer-events:auto;}
+
   @media (max-width: 640px){
     body{padding-bottom:88px;}
+
+    /* 折りたたみ：見出しをタップで開閉する */
+    .card.mobile-collapse > h2{
+      cursor:pointer;margin-bottom:0;display:flex;align-items:center;
+      justify-content:space-between;gap:8px;padding:2px 0;
+    }
+    .card.mobile-collapse:not(.collapsed) > h2{margin-bottom:14px;}
+    .card.mobile-collapse.collapsed > *:not(h2){display:none !important;}
+    .collapse-mark{
+      display:inline-block;flex:none;color:var(--navy);font-size:13px;
+      transition:transform .15s;
+    }
+    .card.mobile-collapse.collapsed .collapse-mark{transform:rotate(-90deg);}
+
+    .to-top{display:block;}
+
+    /* タブの横スクロールに端のぼかしを付けて、続きがあることを示す */
+    .cat-tabs{
+      -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent 100%);
+      mask-image:linear-gradient(90deg,#000 88%,transparent 100%);
+      padding-right:18px;
+    }
+
+    /* 商談カード：バッジ類を折り返す */
+    .deal-card-sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
+    .deal-card-top{position:sticky;}
+
+    /* 一括登録のプレビューを読みやすく */
+    .bulk-hint{font-size:14px;}
     .wrap{padding:0 12px;}
     .rail-inner{padding:14px 12px 10px;flex-direction:row;align-items:center;justify-content:space-between;gap:6px;}
     .brand-eyebrow{display:none;}
@@ -311,27 +355,34 @@
     .card h2{font-size:16px;line-height:1.4;}
     .card h2 span{font-size:13px;}
     .card h2 #exportBtn, .card h2 button{display:block !important;float:none !important;margin:10px 0 0;width:100%;font-size:15px;}
-    .stat-row{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:8px;margin-bottom:16px;scroll-snap-type:x mandatory;padding-bottom:2px;}
-    .stat-card{min-width:122px;flex-shrink:0;padding:11px 13px;scroll-snap-align:start;}
-    .stat-card .n{font-size:23px;}
-    .stat-card .l{font-size:12px;}
+    /* 7枚あるので横スクロールだと見落とす。2列で全部見せる */
+    .stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
+    .stat-card{padding:10px 12px;display:flex;align-items:baseline;gap:8px;}
+    .stat-card .n{font-size:22px;}
+    .stat-card .l{font-size:12px;margin-top:0;}
     .cat-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:14px;}
     .cat-tab-btn{flex-shrink:0;padding:8px 15px;font-size:15px;}
-    .filters{flex-direction:column;gap:8px;}
+    .filters{
+      flex-direction:column;gap:8px;
+      position:sticky;top:0;z-index:5;
+      background:var(--panel);padding:10px 0 8px;margin:0 0 10px;
+      box-shadow:0 6px 8px -8px rgba(30,58,95,.35);
+    }
     .filters input[type=text],.filters select{width:100%;font-size:16px;padding:11px 12px;}
     .table-scroll{display:none;}
     .mobile-cards{display:block;}
-    .deal-card{padding:13px 14px;margin-bottom:12px;}
+    .deal-card{padding:14px 14px 12px;margin-bottom:12px;border-radius:14px;}
+    .deal-card-top{margin-bottom:8px;}
     .deal-card-title{font-size:21px;}
-    .deal-card-sub{font-size:16px;}
+    .deal-card-sub{font-size:15px;}
     .deal-card-row{font-size:16px;line-height:1.5;}
     .deal-card-cust{font-size:16px;line-height:1.5;}
-    .deal-card-actions button{font-size:15px;padding:11px;}
+    .deal-card-actions button{font-size:15px;padding:13px;border-radius:10px;}
     table{font-size:15px;}
     .field input,.field select,.field textarea{font-size:16px;padding:12px;}
-    .form-actions{flex-wrap:wrap;gap:10px;}
-    .btn{width:100%;text-align:center;font-size:16px;padding:13px 16px;}
-    .form-actions .form-msg{margin-left:0;width:100%;order:3;font-size:14px;}
+    .form-actions{display:flex;flex-wrap:wrap;gap:8px;}
+    .btn{flex:1;min-width:0;text-align:center;font-size:16px;padding:14px 10px;}
+    .form-actions .form-msg{margin-left:0;width:100%;order:3;font-size:14px;text-align:center;}
     .dl-item,.small-list-item{flex-wrap:wrap;row-gap:6px;font-size:16px;padding:11px 0;}
     .cust{font-size:14px;}
     .week-tag,.cat-tag{font-size:13px;}
@@ -373,6 +424,7 @@
 </nav>
 
 <div class="sync-toast" id="syncToast"></div>
+<button class="to-top" id="toTop" aria-label="先頭へ戻る">↑</button>
 
 <div class="wrap">
 
@@ -463,7 +515,7 @@
           </form>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>成約車両を登録 <span>ご成約車輌（週次）</span></h2>
           <form id="contractForm">
             <input type="hidden" id="ct_id">
@@ -494,7 +546,7 @@
           </form>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>入札会エントリーを登録 <span>店舗・会場・出品車輌</span></h2>
           <form id="auctionForm">
             <input type="hidden" id="au_id">
@@ -540,7 +592,7 @@
           </form>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>HOT度の凡例</h2>
           <div class="legend">
             <div class="item"><span class="hot hot-5">5</span> 回収待ち</div>
@@ -552,7 +604,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>店舗の色分け</h2>
           <div class="store-legend" id="storeLegend"></div>
         </div>
@@ -565,12 +617,12 @@
           <div id="quickList" style="max-height:340px;overflow:auto;"></div>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>成約車両一覧</h2>
           <div id="contractList" style="max-height:260px;overflow:auto;"></div>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>入札会エントリー一覧</h2>
           <div id="auctionList" style="max-height:260px;overflow:auto;"></div>
         </div>
@@ -621,7 +673,7 @@
           <div class="empty" id="tableEmpty" style="display:none;">該当する商談がありません</div>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>成約車両（週次）</h2>
           <div class="cat-tabs" id="contractTabs"></div>
           <div class="table-scroll" style="max-height:340px;">
@@ -633,7 +685,7 @@
           <div class="empty" id="dashContractEmpty" style="display:none;">登録された成約車両がありません</div>
         </div>
 
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>入札会エントリー</h2>
           <div class="cat-tabs" id="auctionTabs"></div>
           <div id="dashAuctionList" style="max-height:340px;overflow-y:auto;"></div>
@@ -641,19 +693,19 @@
       </div>
 
       <div>
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>期限が近い商談</h2>
           <div id="deadlineList"></div>
         </div>
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>営業担当別 商談件数</h2>
           <div id="repBars" style="max-height:330px;overflow-y:auto;"></div>
         </div>
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>店舗別 商談件数</h2>
           <div id="storeBars"></div>
         </div>
-        <div class="card">
+        <div class="card mobile-collapse">
           <h2>カテゴリ別 在庫件数</h2>
           <div id="catBars"></div>
         </div>
@@ -1742,6 +1794,42 @@
       now.getFullYear()+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
   }
 
+  // ---------- スマホ向けの折りたたみ ----------
+  function isMobile(){ return window.matchMedia('(max-width: 640px)').matches; }
+
+  function initCollapse(){
+    document.querySelectorAll('.card.mobile-collapse').forEach(card=>{
+      const h2 = card.querySelector('h2');
+      if(!h2 || h2.querySelector('.collapse-mark')) return;
+      const mark = document.createElement('span');
+      mark.className = 'collapse-mark';
+      mark.textContent = '▼';
+      h2.appendChild(mark);
+      h2.addEventListener('click', ()=>{
+        if(!isMobile()) return;
+        card.classList.toggle('collapsed');
+      });
+    });
+    applyCollapseDefault();
+  }
+
+  /** スマホでは最初たたんでおく。画面を広げたら全部開く */
+  function applyCollapseDefault(){
+    const mobile = isMobile();
+    document.querySelectorAll('.card.mobile-collapse').forEach(card=>{
+      card.classList.toggle('collapsed', mobile);
+    });
+  }
+
+  function initToTop(){
+    const btn = document.getElementById('toTop');
+    if(!btn) return;
+    btn.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+    window.addEventListener('scroll', ()=>{
+      btn.classList.toggle('show', window.scrollY > 400);
+    }, {passive:true});
+  }
+
   // ---------- tabs ----------
   function initTabs(){
     document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -1751,7 +1839,7 @@
         document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
         document.getElementById('panel-'+tab).classList.add('active');
         if(tab==='dash') renderAll();
-        window.scrollTo({top:0, behavior:'smooth'});
+        window.scrollTo({top:0, behavior:'auto'});
       });
     });
   }
@@ -1759,6 +1847,9 @@
   async function init(){
     initTabs();
     initSelects();
+    initCollapse();
+    initToTop();
+    window.addEventListener('resize', applyCollapseDefault);
     resetForm();
     tickClock();
     setInterval(tickClock, 30000);
