@@ -1598,8 +1598,9 @@
   }
 
   // ---------- dashboard ----------
-  const PAGE_SIZE = 5;       // 初期表示の件数
+  const PAGE_SIZE = 5;        // 初期表示の件数
   let visibleCount = PAGE_SIZE;
+  let filteredCount = 0;      // いまの絞り込み結果の件数
   let activeCategory = '';
   let activeDealStore = '';
 
@@ -1773,12 +1774,12 @@
     const shown = list.slice(0, visibleCount);
     const rest = list.length - shown.length;
 
+    filteredCount = list.length;
     const moreWrap = document.getElementById('moreWrap');
     const moreBtn = document.getElementById('moreBtn');
     if(rest > 0){
       moreWrap.style.display = 'block';
-      const next = Math.min(PAGE_SIZE, rest);
-      moreBtn.textContent = 'もっと見る（残り ' + rest + ' 件 / 次の ' + next + ' 件）';
+      moreBtn.textContent = 'もっと見る（残り ' + rest + ' 件をすべて表示）';
     }else{
       moreWrap.style.display = 'none';
     }
@@ -1968,7 +1969,7 @@
     document.getElementById('filterHot').addEventListener('change', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
     document.getElementById('filterRep').addEventListener('change', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
     document.getElementById('moreBtn').addEventListener('click', ()=>{
-      visibleCount += PAGE_SIZE;
+      visibleCount = filteredCount;   // 残りをすべて表示する
       renderTable();
     });
     document.getElementById('filterStoreSel').addEventListener('change', (e)=>{
