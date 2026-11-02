@@ -221,17 +221,21 @@
   /* カテゴリ列は省略せず全文を出すため、セル側でも折り返さない */
   td.cat-cell{white-space:nowrap;overflow:visible;}
   .deadline-soon{color:var(--red);}
-  .row-actions{white-space:nowrap;}
+  .row-actions{white-space:nowrap;text-align:right;}
   .row-actions button{
-    background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:14px;margin-right:8px;text-decoration:underline;
+    background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:14px;text-decoration:underline;
     font-family:var(--sans);padding:0;
   }
+  /* 商談一覧は列が狭いので、編集と削除を縦に並べて見切れを防ぐ */
+  .deal-table .row-actions button{display:block;margin:0 0 6px auto;}
+  .deal-table .row-actions button:last-child{margin-bottom:0;}
   .row-actions button:hover{color:var(--navy);}
+  .deal-table .row-actions button[data-del]{color:var(--red);}
 
   /* 横スクロールを出さないため、2段組みのセルで列数を減らしている */
   table.deal-table{min-width:0;}
-  col.c-stock{width:15%;} col.c-cat{width:16%;} col.c-hot{width:8%;}
-  col.c-rep{width:14%;} col.c-cust{width:25%;} col.c-note{width:14%;} col.c-act{width:8%;}
+  col.c-stock{width:14%;} col.c-cat{width:15%;} col.c-hot{width:7%;}
+  col.c-rep{width:13%;} col.c-cust{width:24%;} col.c-note{width:16%;} col.c-act{width:11%;}
   .table-scroll{overflow-x:hidden;}
   .cell-main{display:block;}
   .cell-sub{display:block;font-size:13px;color:var(--ink-dim);margin-top:2px;word-break:break-word;}
@@ -1410,7 +1414,10 @@
         sortDeals();
       }
 
-      setMsg('auMsg', added ? ('登録しました（商談 ' + added + ' 件を追加）') : '登録しました', false);
+      // 初期表示は5件なので、登録した分が隠れて「反映されていない」と見えてしまう。
+      // 追加した件数ぶんは必ず表示されるようにしておく。
+      if(added) visibleCount = Math.max(visibleCount, added + PAGE_SIZE);
+      setMsg('auMsg', added ? ('登録しました（商談 ' + added + ' 件を追加）／一覧の件数が増えているか確認してください') : '登録しました', false);
       document.getElementById('auctionForm').reset();
       document.getElementById('au_deal_date').value = todayStr();
       document.getElementById('au_bulk').checked = true;
