@@ -1001,18 +1001,41 @@
   function stockKey(v){
     return String(v===undefined||v===null ? '' : v).replace(/\u3000/g,' ').trim().toUpperCase();
   }
-  function compareStock(a, b){
-    const x = stockKey(a), y = stockKey(b);
-    const nx = /^[0-9]+$/.test(x), ny = /^[0-9]+$/.test(y);
-    if(nx && ny) return Number(x) - Number(y);
-    if(nx) return -1;          // 数字だけのものを先に
-    if(ny) return 1;
-    return x.localeCompare(y, 'ja');
+  /**
+   * 並び順のグループ。
+   * 在庫番号の頭文字で判定し、「在庫前」のように番号が無いものは
+   * 登録されたカテゴリから判定して、同じ形状の中に入るようにする。
+   */
+  const STOCK_HEAD_GROUP = {'1':0, '2':1, '3':2, '5':3, '6':4, '7':5, '8':6, '9':7, 'E':9};
+
+  function stockGroup(d){
+    const head = stockKey(d.stock_no).charAt(0);
+    if(STOCK_HEAD_GROUP[head] !== undefined) return STOCK_HEAD_GROUP[head];
+    const ci = CATS.indexOf(d.category);
+    return ci >= 0 ? ci : 99;
   }
+
+  /** グループ内での順番。番号が無いものは末尾に置く */
+  function stockRank(d){
+    const k = stockKey(d.stock_no);
+    if(/^[0-9]+$/.test(k)) return Number(k);
+    const m = k.match(/^E([0-9]+)/);
+    if(m) return Number(m[1]);
+    return Infinity;          // 在庫前・在庫前新車 など
+  }
+
   function sortDeals(){
     deals.sort((a,b)=>{
-      const c = compareStock(a.stock_no, b.stock_no);
-      if(c !== 0) return c;
+      const g = stockGroup(a) - stockGroup(b);
+      if(g !== 0) return g;
+
+      const r = stockRank(a) - stockRank(b);
+      if(!isNaN(r) && r !== 0) return r;
+
+      // 「在庫前」同士は在庫番号の文字列順
+      const k = stockKey(a.stock_no).localeCompare(stockKey(b.stock_no), 'ja');
+      if(k !== 0) return k;
+
       // 同じ在庫番号の中は商談日の新しい順
       return String(b.deal_date||'').localeCompare(String(a.deal_date||''));
     });
