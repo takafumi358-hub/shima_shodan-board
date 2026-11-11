@@ -518,15 +518,7 @@
             <div class="row3">
               <div class="field">
                 <label>HOT度</label>
-                <select id="f_hot">
-                  <option value="1">1（成り行き・提案中）</option>
-                  <option value="3">3（承認車輛）</option>
-                  <option value="5">5（回収待ち）</option>
-                  <option value="AA">AA（入札会）</option>
-                  <option value="移動">移動（店舗間移動）</option>
-                  <option value="ラジコン">ラジコン（未確認）</option>
-                  <option value="">未設定</option>
-                </select>
+                <select id="f_hot"></select>
               </div>
               <div class="field">
                 <label>商談日</label>
@@ -603,7 +595,11 @@
                 <select id="au_store"></select>
               </div>
             </div>
-            <div class="row2">
+            <div class="row3">
+              <div class="field">
+                <label>HOT度</label>
+                <select id="au_hot"></select>
+              </div>
               <div class="field">
                 <label>営業担当</label>
                 <input type="text" id="au_rep" placeholder="任意（自由入力）">
@@ -795,9 +791,22 @@
 
   const UNSET = '__none__';
 
+  // HOT度の選択肢（新規商談・入札会エントリーで共通）
+  const HOT_OPTIONS = [
+    {v:'1',      t:'1（成り行き・提案中）'},
+    {v:'3',      t:'3（承認車輛）'},
+    {v:'5',      t:'5（回収待ち）'},
+    {v:'AA',     t:'AA（入札会）'},
+    {v:'移動',   t:'移動（店舗間移動）'},
+    {v:'ラジコン', t:'ラジコン（未確認）'},
+    {v:'',       t:'未設定'}
+  ];
+
   // 入札会場・区分。Code.gs の VENUES と必ず一致させること
   const VENUES = ['サミット','イースト','オールジャパン','北関','常務',
-                  'ビックスター','その他入札会','その他展示会'];
+                  'ビックスター','神戸AA','東京AA','小山AA','その他AA',
+                  'ふそうフェア','いすゞフェア','日野会',
+                  'その他入札会','その他展示会','未設定'];
 
   // 在庫番号の頭文字からカテゴリを自動判定する
   const STOCK_PREFIX_CATEGORY = {
@@ -1104,6 +1113,11 @@
     document.getElementById('au_venue').innerHTML =
       VENUES.map(v=>`<option value="${v}">${v}</option>`).join('');
     document.getElementById('au_deal_date').value = todayStr();
+    document.getElementById('f_hot').innerHTML =
+      HOT_OPTIONS.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
+    document.getElementById('au_hot').innerHTML =
+      HOT_OPTIONS.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
+    document.getElementById('au_hot').value = 'AA';   // 入札会なので既定はAA
     document.getElementById('f_rep').innerHTML =
       '<option value="">（未設定）</option>' + SALES_REPS.map(s=>`<option value="${s}">${s}</option>`).join('');
     document.getElementById('filterRep').innerHTML =
@@ -1353,8 +1367,8 @@
 
     // 会場名＋備考をお客様名として使う（例：イースト　開催日11/10　取り消し期限11/6迄）
     const customer1 = note ? (venue + '　' + note) : venue;
-    // 常務の販売は入札会ではないのでHOT度は未設定にする
-    const hot = (venue === '常務') ? '' : 'AA';
+    // HOT度はフォームで選んだ値をそのまま使う
+    const hot = document.getElementById('au_hot').value;
 
     return stocks.map(stock_no => ({
       id: '',
@@ -1391,7 +1405,7 @@
     const cats = Object.keys(byCat).map(c=>c+' '+byCat[c]+'台').join('　');
     const sample = list.slice(0,3).map(d=>d.stock_no+'（'+d.category+'）').join('、');
     el.innerHTML = '<b>' + list.length + ' 台</b>を商談一覧に登録します　'
-      + (list[0].hot ? 'HOT度：AA' : 'HOT度：未設定')
+      + 'HOT度：' + (list[0].hot || '未設定')
       + '<br>' + escapeHtml(cats)
       + '<br>お客様名：<b>' + escapeHtml(list[0].customer1) + '</b>'
       + '<br>例：' + escapeHtml(sample) + (list.length>3 ? ' ほか' : '');
@@ -1415,6 +1429,7 @@
       id: '',
       store: document.getElementById('au_store').value,
       venue: venue,
+      hot: document.getElementById('au_hot').value,
       rep: document.getElementById('au_rep').value.trim(),
       stock_nos: stocks.join(', '),
       note: document.getElementById('au_note').value.trim()
@@ -1443,6 +1458,11 @@
       setMsg('auMsg', added ? ('登録しました（商談 ' + added + ' 件を追加）／一覧の件数が増えているか確認してください') : '登録しました', false);
       document.getElementById('auctionForm').reset();
       document.getElementById('au_deal_date').value = todayStr();
+    document.getElementById('f_hot').innerHTML =
+      HOT_OPTIONS.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
+    document.getElementById('au_hot').innerHTML =
+      HOT_OPTIONS.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
+    document.getElementById('au_hot').value = 'AA';   // 入札会なので既定はAA
       document.getElementById('au_bulk').checked = true;
       renderAll();
       renderAuctionPreview();
@@ -1512,7 +1532,7 @@
       : auctions.map(a=>`
         <div class="small-list-item" style="align-items:flex-start;">
           <span>
-            <b>${escapeHtml(a.venue)}</b> ${storeBadge(a.store)} ${a.rep? '<span class="rep-tag">'+escapeHtml(a.rep)+'</span>' : ''}
+            <b>${escapeHtml(a.venue)}</b> ${storeBadge(a.store)} ${a.rep? '<span class="rep-tag">'+escapeHtml(a.rep)+'</span>' : ''} ${a.hot? hotLabel(a.hot) : ''}
             <span class="cust">（${parseStockList(a.stock_nos).length}台）</span><br>
             <span class="cust">${escapeHtml(a.stock_nos)}</span>
             ${a.note? '<br><span class="cust">'+escapeHtml(a.note)+'</span>' : ''}
@@ -1608,7 +1628,7 @@
       : list.map(a=>`
         <div class="small-list-item" style="align-items:flex-start;">
           <span>
-            <b>${escapeHtml(a.venue)}</b> ${storeBadge(a.store)} ${a.rep? '<span class="rep-tag">'+escapeHtml(a.rep)+'</span>' : ''}
+            <b>${escapeHtml(a.venue)}</b> ${storeBadge(a.store)} ${a.rep? '<span class="rep-tag">'+escapeHtml(a.rep)+'</span>' : ''} ${a.hot? hotLabel(a.hot) : ''}
             <span class="cust">（${parseStockList(a.stock_nos).length}台）</span><br>
             <span class="cust">${escapeHtml(a.stock_nos)}</span>
             ${a.note? '<br><span class="cust">'+escapeHtml(a.note)+'</span>' : ''}
@@ -2010,7 +2030,7 @@
     });
     document.getElementById('contractForm').addEventListener('submit', handleContractSubmit);
     document.getElementById('auctionForm').addEventListener('submit', handleAuctionSubmit);
-    ['au_venue','au_store','au_rep','au_note','au_stocks','au_bulk','au_deal_date'].forEach(id=>{
+    ['au_venue','au_store','au_rep','au_note','au_stocks','au_bulk','au_deal_date','au_hot'].forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.addEventListener('input', renderAuctionPreview);
       if(el) el.addEventListener('change', renderAuctionPreview);
