@@ -268,6 +268,11 @@
   #panel-all .wrap{max-width:none;}
   .all-scroll{max-height:calc(100vh - 260px);}
   .filters-all select{min-width:140px;}
+  .btn-reset{
+    background:#fff;border:1px solid var(--line);color:var(--ink-dim);
+    border-radius:8px;padding:9px 14px;font-size:14px;font-family:var(--sans);cursor:pointer;
+  }
+  .btn-reset:hover{border-color:var(--navy);color:var(--navy);}
   @media (max-width:640px){
     .all-scroll{max-height:none;}
   }
@@ -789,6 +794,15 @@
           <option value="ラジコン">ラジコン</option>
         </select>
         <select id="filterRepAll"></select>
+        <select id="sortAll">
+          <option value="stock">並び：在庫番号順</option>
+          <option value="elapsed">並び：経過日数が長い順</option>
+          <option value="date_desc">並び：商談日が新しい順</option>
+          <option value="date_asc">並び：商談日が古い順</option>
+          <option value="hot">並び：HOT度順</option>
+          <option value="rep">並び：営業担当順</option>
+        </select>
+        <button type="button" class="btn-reset" id="resetAll">絞り込みを解除</button>
       </div>
       <div class="table-scroll all-scroll">
         <table class="deal-table">
@@ -1082,6 +1096,20 @@
     const m = k.match(/^E([0-9]+)/);
     if(m) return Number(m[1]);
     return Infinity;          // 在庫前・在庫前新車 など
+  }
+
+  /** 在庫番号順の比較。形状グループ → 番号 → 在庫前 → 商談日の新しい順 → id */
+  function compareForStock(a, b){
+      const g = stockGroup(a) - stockGroup(b);
+      if(g !== 0) return g;
+      const r = stockRank(a) - stockRank(b);
+      if(!isNaN(r) && r !== 0) return r;
+      const k = stockKey(a.stock_no).localeCompare(stockKey(b.stock_no), 'ja');
+      if(k !== 0) return k;
+      const dt = String(b.deal_date||'').localeCompare(String(a.deal_date||''));
+      if(dt !== 0) return dt;
+      // 最後は id で固定し、シート上の並び順に左右されないようにする
+      return String(a.id).localeCompare(String(b.id));
   }
 
   function sortDeals(){
@@ -1964,6 +1992,84 @@
     });
   }
 
+  /**
+   * 商談全件タブの表示状態（絞り込み・並び順）。
+   * この端末だけに保存し、他の人の操作には影響されない。
+   */
+  const ALL_VIEW_KEY = 'shodanBoard.allView.v1';
+
+  function saveAllView(){
+    try{
+      localStorage.setItem(ALL_VIEW_KEY, JSON.stringify({
+        q:  document.getElementById('searchInputAll').value,
+        c:  document.getElementById('filterCatAll').value,
+        s:  document.getElementById('filterStoreAll').value,
+        h:  document.getElementById('filterHotAll').value,
+        r:  document.getElementById('filterRepAll').value,
+        o:  document.getElementById('sortAll').value
+      }));
+    }catch(e){ /* 保存できなくても動作に支障はない */ }
+  }
+
+  function loadAllView(){
+    try{
+      const v = JSON.parse(localStorage.getItem(ALL_VIEW_KEY) || '{}');
+      if(v.q !== undefined) document.getElementById('searchInputAll').value = v.q;
+      if(v.c !== undefined) document.getElementById('filterCatAll').value = v.c;
+      if(v.s !== undefined) document.getElementById('filterStoreAll').value = v.s;
+      if(v.h !== undefined) document.getElementById('filterHotAll').value = v.h;
+      if(v.r !== undefined) document.getElementById('filterRepAll').value = v.r;
+      if(v.o !== undefined) document.getElementById('sortAll').value = v.o;
+    }catch(e){ /* 壊れていれば既定のまま */ }
+  }
+
+  const HOT_ORDER = {'5':0, '3':1, 'AA':2, '1':3, 'ラジコン':4, '移動':5, '':6};
+
+  /** 全件タブの並べ替え。元の deals は触らずコピーを並べる */
+  function sortForAll(list, mode){
+    const byDate = (d)=> String(d.deal_date||'');
+    const arr = list.slice();
+
+    if(mode === 'elapsed'){
+      arr.sort((a,b)=>{
+        const ea = -1 * daysUntil(a.deal_date);
+        const eb = -1 * daysUntil(b.deal_date);
+        if(isNaN(ea) && isNaN(eb)) return 0;
+        if(isNaN(ea)) return 1;
+        if(isNaN(eb)) return -1;
+        return eb - ea;
+      });
+    }else if(mode === 'date_desc'){
+      arr.sort((a,b)=> byDate(b).localeCompare(byDate(a)));
+    }else if(mode === 'date_asc'){
+      arr.sort((a,b)=>{
+        if(!byDate(a)) return 1;
+        if(!byDate(b)) return -1;
+        return byDate(a).localeCompare(byDate(b));
+      });
+    }else if(mode === 'hot'){
+      arr.sort((a,b)=>{
+        const ha = HOT_ORDER[String(a.hot||'')] !== undefined ? HOT_ORDER[String(a.hot||'')] : 9;
+        const hb = HOT_ORDER[String(b.hot||'')] !== undefined ? HOT_ORDER[String(b.hot||'')] : 9;
+        if(ha !== hb) return ha - hb;
+        return compareForStock(a, b);
+      });
+    }else if(mode === 'rep'){
+      arr.sort((a,b)=>{
+        const ra = normRep(a.rep), rb = normRep(b.rep);
+        if(ra !== rb){
+          if(!ra) return 1;
+          if(!rb) return -1;
+          return SALES_REPS.indexOf(ra) - SALES_REPS.indexOf(rb);
+        }
+        return compareForStock(a, b);
+      });
+    }else{
+      arr.sort(compareForStock);
+    }
+    return arr;
+  }
+
   /** 商談全件タブ。件数制限なしで全部出す */
   function renderAllTable(){
     const q = document.getElementById('searchInputAll').value.trim().toLowerCase();
@@ -1980,6 +2086,9 @@
     if(fr === UNSET) list = list.filter(d=>!normRep(d.rep));
     else if(fr) list = list.filter(d=>normRep(d.rep)===fr);
     if(q) list = list.filter(d => [d.stock_no,d.vehicle,d.store,d.rep,d.customer1,d.customer2,d.customer3,d.deadline_note].join(' ').toLowerCase().includes(q));
+
+    list = sortForAll(list, document.getElementById('sortAll').value);
+    saveAllView();
 
     document.getElementById('allCount').textContent = `全 ${list.length} 件 / 総 ${deals.length} 件`;
     document.getElementById('tableEmptyAll').style.display = list.length? 'none':'block';
@@ -2147,7 +2256,14 @@
     document.getElementById('searchInput').addEventListener('input', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
     document.getElementById('filterHot').addEventListener('change', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
     document.getElementById('filterRep').addEventListener('change', ()=>{ visibleCount = PAGE_SIZE; renderTable(); });
-    ['searchInputAll','filterCatAll','filterStoreAll','filterHotAll','filterRepAll'].forEach(id=>{
+    document.getElementById('resetAll').addEventListener('click', ()=>{
+      ['searchInputAll','filterCatAll','filterStoreAll','filterHotAll','filterRepAll'].forEach(id=>{
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('sortAll').value = 'stock';
+      renderAllTable();
+    });
+    ['searchInputAll','filterCatAll','filterStoreAll','filterHotAll','filterRepAll','sortAll'].forEach(id=>{
       const el = document.getElementById(id);
       el.addEventListener('input', renderAllTable);
       el.addEventListener('change', renderAllTable);
@@ -2178,6 +2294,8 @@
     });
     renderAuctionPreview();
     document.getElementById('exportBtn').addEventListener('click', handleExport);
+
+    loadAllView();
 
     await loadAll();
     renderAll();
